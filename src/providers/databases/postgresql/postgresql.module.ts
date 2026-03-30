@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DATA_SOURCE } from 'src/common/constants';
-import { User } from 'src/features/user/entity/user.entity';
+import { User } from 'src/features/users/entity/user.entity';
 import { DataSource } from 'typeorm';
 
 export const databaseProviders = [

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { UserService } from './user.service';
+import { UsersService } from './users.service';
 import { DataSource } from 'typeorm';
 import { User } from './entity/user.entity';
 import { DATA_SOURCE, USER_REPOSITORY } from 'src/common/constants';
@@ -15,7 +15,7 @@ export const userProviders = [
 
 @Module({
   imports: [DatabaseModule],
-  providers: [...userProviders, UserService],
-  exports: [UserService],
+  providers: [...userProviders, UsersService],
+  exports: [UsersService],
 })
-export class UserModule {}
+export class UsersModule {}
