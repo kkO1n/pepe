@@ -16,14 +16,14 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     return this.getRepository(User, entityManager);
   }
 
-  async findUserById(postId: number): Promise<User> {
-    return this.userRepository().findOneOrFail({
+  async findUserById(postId: number): Promise<User | null> {
+    return this.userRepository().findOne({
       where: { id: postId },
     });
   }
 
-  async findUserByLogin(login: string): Promise<User> {
-    return this.userRepository().findOneOrFail({
+  async findUserByLogin(login: string): Promise<User | null> {
+    return this.userRepository().findOne({
       where: { login },
     });
   }

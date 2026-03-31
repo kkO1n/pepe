@@ -5,18 +5,28 @@ import {
   Req,
   Res,
   UnauthorizedException,
+  UsePipes,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
+import {
+  createUserSchema,
+  type CreateUserDto,
+} from 'src/features/users/dto/create-user-dto';
 import { type Response, type Request } from 'express';
+import { ZodValidationPipe } from 'src/common/pipes/zod-validation-pipe';
+import {
+  loginUserSchema,
+  type LoginUserDto,
+} from 'src/features/users/dto/login-user-dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
+  @UsePipes(new ZodValidationPipe(loginUserSchema))
   async signIn(
-    @Body() signInDto: { login: string; password: string },
+    @Body() signInDto: LoginUserDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = crypto.randomUUID();
@@ -38,6 +48,7 @@ export class AuthController {
   }
 
   @Post('register')
+  @UsePipes(new ZodValidationPipe(createUserSchema))
   signUp(
     @Body() signUpDto: CreateUserDto,
     @Res({ passthrough: true }) res: Response,
