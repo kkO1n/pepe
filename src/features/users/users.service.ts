@@ -6,7 +6,11 @@ import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 export class UsersService {
   constructor(private readonly userRepository: IUserRepository) {}
 
-  findOneById(userId: number) {
+  async findUsers() {
+    return this.userRepository.findUsers();
+  }
+
+  async findOneById(userId: number) {
     return this.userRepository.findUserById(userId);
   }
 
