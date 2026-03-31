@@ -23,6 +23,14 @@ export class UsersService {
     });
   }
 
+  async findOneById(id: number) {
+    return this.userRepository.findOne({
+      where: {
+        id,
+      },
+    });
+  }
+
   createOne(user: CreateUserDto): Promise<User> {
     return this.userRepository.save(user);
   }

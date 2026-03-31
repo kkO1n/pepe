@@ -1,10 +1,14 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { AuthService } from './auth/auth.service';
+import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard, type RequestWithUser } from './auth/auth.guard';
+import { UsersService } from './features/users/users.service';
 
 @Controller()
 export class AppController {
-  constructor(private authService: AuthService) {}
+  constructor(private usersService: UsersService) {}
 
-  @Post('profile/my')
-  getProfile() {}
+  @UseGuards(AuthGuard)
+  @Get('profile/my')
+  async getProfile(@Req() req: RequestWithUser) {
+    return await this.usersService.findOne(req.user.login);
+  }
 }
