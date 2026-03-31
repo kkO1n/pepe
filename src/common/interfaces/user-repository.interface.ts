@@ -1,0 +1,8 @@
+import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
+import { User } from 'src/features/users/entity/user.entity';
+
+export abstract class IUserRepository {
+  abstract findUserById(userId: number): Promise<User>;
+  abstract findUserByLogin(login: string): Promise<User>;
+  abstract createUser(createUserDto: CreateUserDto): Promise<User>;
+}

@@ -30,7 +30,7 @@ export class AuthService {
     pass: string,
     refreshToken: string,
   ): Promise<{ access_token: string }> {
-    const user = await this.usersService.findOne(login);
+    const user = await this.usersService.findOneByLogin(login);
 
     if (!user) throw new UnprocessableEntityException();
 
@@ -45,7 +45,9 @@ export class AuthService {
     createUserDto: CreateUserDto,
     refreshToken: string,
   ): Promise<{ access_token: string }> {
-    const existingUser = await this.usersService.findOne(createUserDto.login);
+    const existingUser = await this.usersService.findOneByLogin(
+      createUserDto.login,
+    );
 
     if (existingUser) {
       throw new ConflictException();
