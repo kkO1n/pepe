@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { USER_REPOSITORY } from 'src/common/constants';
 import { User } from 'src/features/users/entity/user.entity';
 import { Repository } from 'typeorm';
+import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 
 @Injectable()
 export class UsersService {
@@ -20,5 +21,9 @@ export class UsersService {
         login,
       },
     });
+  }
+
+  createOne(user: CreateUserDto): Promise<User> {
+    return this.userRepository.save(user);
   }
 }

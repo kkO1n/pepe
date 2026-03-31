@@ -1,5 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 import { UsersService } from 'src/features/users/users.service';
 
 @Injectable()
@@ -21,5 +26,19 @@ export class AuthService {
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
+  }
+
+  async signUp(
+    createUserDto: CreateUserDto,
+  ): Promise<{ access_token: string }> {
+    const existingUser = await this.usersService.findOne(createUserDto.login);
+
+    if (existingUser) {
+      throw new ConflictException();
+    }
+
+    const createdUser = await this.usersService.createOne(createUserDto);
+
+    return this.signIn(createdUser.login, createdUser.password);
   }
 }
