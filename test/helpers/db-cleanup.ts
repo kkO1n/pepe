@@ -1,4 +1,5 @@
 import { DataSource } from 'typeorm';
+import { createMigrationDataSource } from '../../src/providers/databases/postgresql/typeorm-migration.datasource';
 
 const DB_HOST = process.env.DB_HOST ?? 'localhost';
 const DB_PORT = Number(process.env.DB_PORT ?? 5430);
@@ -40,6 +41,15 @@ export async function cleanupDatabase(): Promise<void> {
   });
 
   await dataSource.initialize();
-  await dataSource.query('TRUNCATE TABLE "user" RESTART IDENTITY CASCADE');
+  await dataSource.query(
+    'TRUNCATE TABLE "user_sessions", "user" RESTART IDENTITY CASCADE',
+  );
+  await dataSource.destroy();
+}
+
+export async function runMigrations(): Promise<void> {
+  const dataSource = createMigrationDataSource();
+  await dataSource.initialize();
+  await dataSource.runMigrations();
   await dataSource.destroy();
 }

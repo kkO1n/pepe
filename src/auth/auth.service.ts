@@ -2,11 +2,13 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  InternalServerErrorException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { hash, compareSync } from 'bcryptjs';
+import { IUserSessionRepository } from 'src/common/interfaces/user-session-repository.interface';
 import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 import { UsersService } from 'src/features/users/users.service';
 
@@ -15,21 +17,26 @@ export type JwtPayload = {
   login: string;
 };
 
-const sessions: Record<string, number> = {};
-
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
+    private userSessionRepository: IUserSessionRepository,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
+
+  getRefreshTokenMaxAgeMs(): number {
+    return this.getRefreshTokenTtlDays() * 24 * 60 * 60 * 1000;
+  }
 
   async signIn(
     login: string,
     pass: string,
     refreshToken: string,
   ): Promise<{ access_token: string }> {
+    await this.userSessionRepository.deleteExpired(new Date());
+
     const user = await this.usersService.getAuthUserByLogin(login);
 
     if (!user) throw new UnprocessableEntityException();
@@ -72,29 +79,62 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string, newRefreshToken: string) {
-    const userId = sessions[refreshToken];
+    const now = new Date();
+    await this.userSessionRepository.deleteExpired(now);
 
-    if (userId) {
-      const user = await this.usersService.getUserById(userId);
+    const session = await this.userSessionRepository.findValidByToken(
+      refreshToken,
+      now,
+    );
 
-      if (!user) throw new UnauthorizedException();
+    if (!session) throw new UnauthorizedException();
 
-      delete sessions[refreshToken];
-      return this.issueTokens(user, newRefreshToken);
+    const user = await this.usersService.getUserById(session.userId);
+
+    if (!user) {
+      await this.userSessionRepository.deleteByToken(refreshToken);
+      throw new UnauthorizedException();
     }
 
-    throw new UnauthorizedException();
+    return this.issueTokens(user, newRefreshToken);
+  }
+
+  async logout(refreshToken?: string): Promise<void> {
+    await this.userSessionRepository.deleteExpired(new Date());
+
+    if (!refreshToken) return;
+
+    await this.userSessionRepository.deleteByToken(refreshToken);
   }
 
   private async issueTokens(
     user: { id: number; login: string },
     refreshToken: string,
   ) {
-    sessions[refreshToken] = user.id;
+    const expiresAt = new Date(Date.now() + this.getRefreshTokenMaxAgeMs());
+    await this.userSessionRepository.upsertForUser(
+      user.id,
+      refreshToken,
+      expiresAt,
+    );
+
     const payload: JwtPayload = { sub: user.id, login: user.login };
 
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
+  }
+
+  private getRefreshTokenTtlDays(): number {
+    const configuredTtl = this.configService.get<string>(
+      'REFRESH_TOKEN_TTL_DAYS',
+    );
+    const ttlDays = Number(configuredTtl ?? '7');
+
+    if (!Number.isFinite(ttlDays) || ttlDays <= 0) {
+      throw new InternalServerErrorException();
+    }
+
+    return ttlDays;
   }
 }

@@ -4,9 +4,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from 'src/features/users/users.module';
 import { AuthController } from './auth.controller';
 import { ConfigModule } from '@nestjs/config';
+import { userSessionRepositoryProvider } from './user-session.repository-provider';
+import { DatabaseModule } from 'src/providers/databases/postgresql/postgresql.module';
 
 @Module({
   imports: [
+    DatabaseModule,
     UsersModule,
     JwtModule.register({
       global: true,
@@ -15,7 +18,7 @@ import { ConfigModule } from '@nestjs/config';
     }),
     ConfigModule,
   ],
-  providers: [AuthService],
+  providers: [AuthService, userSessionRepositoryProvider],
   controllers: [AuthController],
   exports: [AuthService],
 })

@@ -4,10 +4,21 @@ import { Test, TestingModule } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { cleanupDatabase, ensureTestDatabase } from './helpers/db-cleanup';
+import {
+  cleanupDatabase,
+  ensureTestDatabase,
+  runMigrations,
+} from './helpers/db-cleanup';
 
 describe('App (e2e)', () => {
   let app: INestApplication;
+  type SupertestTarget = Parameters<typeof request>[0];
+
+  const httpServer = (): SupertestTarget =>
+    app.getHttpServer() as unknown as SupertestTarget;
+
+  const api = () => request(httpServer());
+  const apiAgent = () => request.agent(httpServer());
 
   const buildRegisterPayload = () => {
     const unique = Date.now().toString() + Math.random().toString().slice(2, 6);
@@ -21,18 +32,26 @@ describe('App (e2e)', () => {
   };
 
   const extractRefreshCookie = (
-    setCookie: string[] | undefined,
+    setCookie: string | string[] | undefined,
   ): string | null => {
-    if (!setCookie?.length) return null;
-    const refreshCookie = setCookie.find((cookie) =>
+    const cookies = Array.isArray(setCookie)
+      ? setCookie
+      : typeof setCookie === 'string'
+        ? [setCookie]
+        : [];
+
+    if (!cookies.length) return null;
+    const refreshCookie = cookies.find((cookie) =>
       cookie.startsWith('refresh_token='),
     );
-    return refreshCookie ?? null;
+    if (!refreshCookie) return null;
+
+    return refreshCookie.split(';')[0] ?? null;
   };
 
   const registerAndGetAccessToken = async (): Promise<string> => {
     const payload = buildRegisterPayload();
-    const response = await request(app.getHttpServer())
+    const response = await api()
       .post('/auth/register')
       .send(payload)
       .expect(201);
@@ -73,6 +92,7 @@ describe('App (e2e)', () => {
   beforeAll(async () => {
     try {
       await ensureTestDatabase();
+      await runMigrations();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(
@@ -111,7 +131,7 @@ describe('App (e2e)', () => {
   });
 
   it('POST /auth/register should create user and set refresh cookie', async () => {
-    const response = await request(app.getHttpServer())
+    const response = await api()
       .post('/auth/register')
       .send(buildRegisterPayload())
       .expect(201);
@@ -123,20 +143,14 @@ describe('App (e2e)', () => {
   });
 
   it('POST /auth/register should return 400 for invalid payload', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({ login: 'x' })
-      .expect(400);
+    await api().post('/auth/register').send({ login: 'x' }).expect(400);
   });
 
   it('POST /auth/login should return access token and set refresh cookie', async () => {
     const payload = buildRegisterPayload();
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send(payload)
-      .expect(201);
+    await api().post('/auth/register').send(payload).expect(201);
 
-    const response = await request(app.getHttpServer())
+    const response = await api()
       .post('/auth/login')
       .send({
         login: payload.login,
@@ -152,12 +166,9 @@ describe('App (e2e)', () => {
 
   it('POST /auth/login should return 401 for invalid credentials', async () => {
     const payload = buildRegisterPayload();
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send(payload)
-      .expect(201);
+    await api().post('/auth/register').send(payload).expect(201);
 
-    await request(app.getHttpServer())
+    await api()
       .post('/auth/login')
       .send({
         login: payload.login,
@@ -167,7 +178,7 @@ describe('App (e2e)', () => {
   });
 
   it('POST /auth/refresh should rotate refresh cookie and return new access token', async () => {
-    const agent = request.agent(app.getHttpServer());
+    const agent = apiAgent();
     const payload = buildRegisterPayload();
 
     const registerResponse = await agent
@@ -189,18 +200,73 @@ describe('App (e2e)', () => {
     );
     expect(newRefreshCookie).not.toBeNull();
     expect(newRefreshCookie).not.toEqual(oldRefreshCookie);
+
+    await api()
+      .post('/auth/refresh')
+      .set('Cookie', oldRefreshCookie ?? '')
+      .expect(401);
+  });
+
+  it('POST /auth/login should invalidate previous session for the same user', async () => {
+    const payload = buildRegisterPayload();
+    const registerResponse = await api()
+      .post('/auth/register')
+      .send(payload)
+      .expect(201);
+    const firstRefreshCookie = extractRefreshCookie(
+      registerResponse.headers['set-cookie'],
+    );
+    expect(firstRefreshCookie).not.toBeNull();
+
+    const loginResponse = await api()
+      .post('/auth/login')
+      .send({
+        login: payload.login,
+        password: payload.password,
+      })
+      .expect(201);
+    const secondRefreshCookie = extractRefreshCookie(
+      loginResponse.headers['set-cookie'],
+    );
+    expect(secondRefreshCookie).not.toBeNull();
+    expect(secondRefreshCookie).not.toEqual(firstRefreshCookie);
+
+    await api()
+      .post('/auth/refresh')
+      .set('Cookie', firstRefreshCookie ?? '')
+      .expect(401);
+  });
+
+  it('POST /auth/logout should clear session and invalidate refresh token', async () => {
+    const payload = buildRegisterPayload();
+    const registerResponse = await api()
+      .post('/auth/register')
+      .send(payload)
+      .expect(201);
+    const refreshCookie = extractRefreshCookie(
+      registerResponse.headers['set-cookie'],
+    );
+    expect(refreshCookie).not.toBeNull();
+
+    await api()
+      .post('/auth/logout')
+      .set('Cookie', refreshCookie ?? '')
+      .expect(204);
+
+    await api()
+      .post('/auth/refresh')
+      .set('Cookie', refreshCookie ?? '')
+      .expect(401);
   });
 
   it('GET /users should return 401 without bearer token', async () => {
-    await request(app.getHttpServer())
-      .get('/users?page=1&limit=10&login=abc')
-      .expect(401);
+    await api().get('/users?page=1&limit=10&login=abc').expect(401);
   });
 
   it('GET /users should return 200 with bearer token', async () => {
     const accessToken = await registerAndGetAccessToken();
 
-    await request(app.getHttpServer())
+    await api()
       .get('/users?page=1&limit=10')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
@@ -209,12 +275,12 @@ describe('App (e2e)', () => {
   it('GET /users should return 400 for invalid pagination values', async () => {
     const accessToken = await registerAndGetAccessToken();
 
-    await request(app.getHttpServer())
+    await api()
       .get('/users?page=0&limit=10')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(400);
 
-    await request(app.getHttpServer())
+    await api()
       .get('/users?page=1&limit=101')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(400);
@@ -222,14 +288,14 @@ describe('App (e2e)', () => {
 
   it('PUT /users/:id should update user with partial payload', async () => {
     const accessToken = await registerAndGetAccessToken();
-    const profileResponse = await request(app.getHttpServer())
+    const profileResponse = await api()
       .get('/profile/my')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
     const userId = getNumberField(profileResponse.body as unknown, 'id');
 
-    await request(app.getHttpServer())
+    await api()
       .put(`/users/${userId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({ description: 'updated-description' })
@@ -238,14 +304,14 @@ describe('App (e2e)', () => {
 
   it('DELETE /users/:id should return 204', async () => {
     const accessToken = await registerAndGetAccessToken();
-    const profileResponse = await request(app.getHttpServer())
+    const profileResponse = await api()
       .get('/profile/my')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
     const userId = getNumberField(profileResponse.body as unknown, 'id');
 
-    await request(app.getHttpServer())
+    await api()
       .delete(`/users/${userId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(204);
