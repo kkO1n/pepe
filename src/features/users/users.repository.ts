@@ -2,13 +2,11 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DataSource, EntityManager, ILike, Repository } from 'typeorm';
 import { User } from './entity/user.entity';
 import { BaseRepository } from '../base.repository';
-import {
-  IUserRepository,
-  PaginatedUsersQueryParams,
-} from 'src/common/interfaces/user-repository.interface';
+import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
 import { CreateUserDto } from './dto/create-user-dto';
 import { DATA_SOURCE } from 'src/common/constants';
-import { PutUserDto } from './dto/put-user-dto';
+import { GetUsersQueryDto } from './dto/get-users-query-dto';
+import { UpdateUserDto } from './dto/update-user-dto';
 
 @Injectable()
 export class UserRepository extends BaseRepository implements IUserRepository {
@@ -24,11 +22,15 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     page,
     limit,
     login,
-  }: PaginatedUsersQueryParams): Promise<[User[], number]> {
+  }: GetUsersQueryDto): Promise<[User[], number]> {
+    const currentPage = page ?? 1;
+    const pageSize = limit ?? 10;
+    const trimmedLogin = login?.trim();
+
     return this.userRepository().findAndCount({
-      where: login ? { login: ILike(`%${login}%`) } : {},
-      take: limit,
-      skip: (page - 1) * limit,
+      where: trimmedLogin ? { login: ILike(`%${trimmedLogin}%`) } : {},
+      take: pageSize,
+      skip: (currentPage - 1) * pageSize,
       order: { id: 'ASC' },
     });
   }
@@ -49,7 +51,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     return this.userRepository().save(createUserDto);
   }
 
-  async putUser(id: number, putUserDto: PutUserDto): Promise<User> {
+  async putUser(id: number, putUserDto: UpdateUserDto): Promise<User> {
     return this.userRepository().save({
       id,
       ...putUserDto,
@@ -57,6 +59,6 @@ export class UserRepository extends BaseRepository implements IUserRepository {
   }
 
   async deleteUser(id: number) {
-    return await this.userRepository().softDelete(id);
+    await this.userRepository().softDelete(id);
   }
 }

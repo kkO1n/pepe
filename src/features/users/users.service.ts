@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import {
-  IUserRepository,
-  PaginatedUsersQueryParams,
-} from 'src/common/interfaces/user-repository.interface';
+import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
 import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
-import { PutUserDto } from './dto/put-user-dto';
+import { GetUsersQueryDto } from './dto/get-users-query-dto';
+import { UpdateUserDto } from './dto/update-user-dto';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly userRepository: IUserRepository) {}
 
-  async findUsers(params: PaginatedUsersQueryParams) {
+  async findUsers(params: GetUsersQueryDto) {
     return this.userRepository.findUsers(params);
   }
 
@@ -26,7 +24,7 @@ export class UsersService {
     return this.userRepository.createUser(createUserDto);
   }
 
-  async putOne(id: number, putUserDto: PutUserDto) {
+  async putOne(id: number, putUserDto: UpdateUserDto) {
     return this.userRepository.putUser(id, putUserDto);
   }
 
