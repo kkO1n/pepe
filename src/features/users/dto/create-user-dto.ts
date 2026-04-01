@@ -5,7 +5,7 @@ export const createUserSchema = z
     login: z.string(),
     email: z.string(),
     password: z.string(),
-    age: z.number(),
+    age: z.coerce.number(),
     description: z.string().max(1000),
   })
   .required();

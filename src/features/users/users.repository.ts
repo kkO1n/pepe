@@ -8,6 +8,7 @@ import {
 } from 'src/common/interfaces/user-repository.interface';
 import { CreateUserDto } from './dto/create-user-dto';
 import { DATA_SOURCE } from 'src/common/constants';
+import { PutUserDto } from './dto/put-user-dto';
 
 @Injectable()
 export class UserRepository extends BaseRepository implements IUserRepository {
@@ -44,7 +45,18 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     });
   }
 
-  async createUser(userDto: CreateUserDto): Promise<User> {
-    return this.userRepository().save(userDto);
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
+    return this.userRepository().save(createUserDto);
+  }
+
+  async putUser(id: number, putUserDto: PutUserDto): Promise<User> {
+    return this.userRepository().save({
+      id,
+      ...putUserDto,
+    });
+  }
+
+  async deleteUser(id: number) {
+    return await this.userRepository().softDelete(id);
   }
 }

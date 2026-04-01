@@ -4,6 +4,7 @@ import {
   PaginatedUsersQueryParams,
 } from 'src/common/interfaces/user-repository.interface';
 import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
+import { PutUserDto } from './dto/put-user-dto';
 
 @Injectable()
 export class UsersService {
@@ -23,5 +24,13 @@ export class UsersService {
 
   async createOne(createUserDto: CreateUserDto) {
     return this.userRepository.createUser(createUserDto);
+  }
+
+  async putOne(id: number, putUserDto: PutUserDto) {
+    return this.userRepository.putUser(id, putUserDto);
+  }
+
+  deleteOne(id: number) {
+    return this.userRepository.deleteUser(id);
   }
 }
