@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
+import {
+  IUserRepository,
+  PaginatedUsersQueryParams,
+} from 'src/common/interfaces/user-repository.interface';
 import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly userRepository: IUserRepository) {}
 
-  async findUsers() {
-    return this.userRepository.findUsers();
+  async findUsers(params: PaginatedUsersQueryParams) {
+    return this.userRepository.findUsers(params);
   }
 
   async findOneById(userId: number) {

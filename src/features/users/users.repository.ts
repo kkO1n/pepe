@@ -1,8 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, ILike, Repository } from 'typeorm';
 import { User } from './entity/user.entity';
 import { BaseRepository } from '../base.repository';
-import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
+import {
+  IUserRepository,
+  PaginatedUsersQueryParams,
+} from 'src/common/interfaces/user-repository.interface';
 import { CreateUserDto } from './dto/create-user-dto';
 import { DATA_SOURCE } from 'src/common/constants';
 
@@ -16,8 +19,17 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     return this.getRepository(User, entityManager);
   }
 
-  async findUsers(): Promise<[User[], number]> {
-    return this.userRepository().findAndCount();
+  async findUsers({
+    page,
+    limit,
+    login,
+  }: PaginatedUsersQueryParams): Promise<[User[], number]> {
+    return this.userRepository().findAndCount({
+      where: login ? { login: ILike(`%${login}%`) } : {},
+      take: limit,
+      skip: (page - 1) * limit,
+      order: { id: 'ASC' },
+    });
   }
 
   async findUserById(postId: number): Promise<User | null> {
