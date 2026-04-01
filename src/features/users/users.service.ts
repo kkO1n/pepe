@@ -9,7 +9,12 @@ export class UsersService {
   constructor(private readonly userRepository: IUserRepository) {}
 
   async findUsers(params: GetUsersQueryDto) {
-    return this.userRepository.findUsers(params);
+    const [data, total] = await this.userRepository.findUsers(params);
+
+    return {
+      data,
+      total,
+    };
   }
 
   async findOneById(userId: number) {

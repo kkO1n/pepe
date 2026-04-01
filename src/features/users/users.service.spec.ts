@@ -35,9 +35,10 @@ describe('UsersService', () => {
     const params: GetUsersQueryDto = { page: 2, limit: 5, login: 'jo' };
     repositoryMock.findUsers.mockResolvedValue([[], 0]);
 
-    await service.findUsers(params);
+    const result = await service.findUsers(params);
 
     expect(repositoryMock.findUsers).toHaveBeenCalledWith(params);
+    expect(result).toEqual({ data: [], total: 0 });
   });
 
   it('findOneByLogin delegates to repository', async () => {
