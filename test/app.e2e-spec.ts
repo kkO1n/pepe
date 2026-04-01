@@ -74,8 +74,7 @@ describe('App (e2e)', () => {
     try {
       await ensureTestDatabase();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error);
       throw new Error(
         `E2E Postgres setup failed for database "${process.env.DB_NAME ?? 'db_test'}": ${message}`,
       );

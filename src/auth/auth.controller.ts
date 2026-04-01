@@ -41,13 +41,13 @@ export class AuthController {
   }
 
   @Post('register')
-  signUp(
+  async signUp(
     @Body() signUpDto: CreateUserDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = crypto.randomUUID();
 
-    const payload = this.authService.signUp(signUpDto, refreshToken);
+    const payload = await this.authService.signUp(signUpDto, refreshToken);
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,

@@ -25,7 +25,7 @@ export class UsersController {
 
   @Get()
   getUsers(@Query() query: GetUsersQueryDto) {
-    return this.usersService.findUsers(query);
+    return this.usersService.listUsers(query);
   }
 
   @Put(':id')
@@ -33,12 +33,12 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() putUser: UpdateUserDto,
   ) {
-    return this.usersService.putOne(id, putUser);
+    return this.usersService.updateUser(id, putUser);
   }
 
   @Delete(':id')
   @HttpCode(204)
   deleteUser(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.deleteOne(id);
+    return this.usersService.deleteUser(id);
   }
 }

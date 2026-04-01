@@ -8,12 +8,12 @@ import { UsersService } from './users.service';
 describe('UsersService', () => {
   let service: UsersService;
   const repositoryMock = {
-    findUsers: jest.fn(),
-    findUserById: jest.fn(),
-    findUserByLogin: jest.fn(),
-    createUser: jest.fn(),
-    putUser: jest.fn(),
-    deleteUser: jest.fn(),
+    findMany: jest.fn(),
+    findById: jest.fn(),
+    findByLogin: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    softDeleteById: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -31,25 +31,25 @@ describe('UsersService', () => {
     service = module.get(UsersService);
   });
 
-  it('findUsers delegates to repository with the same params', async () => {
+  it('listUsers delegates to repository with the same params', async () => {
     const params: GetUsersQueryDto = { page: 2, limit: 5, login: 'jo' };
-    repositoryMock.findUsers.mockResolvedValue([[], 0]);
+    repositoryMock.findMany.mockResolvedValue([[], 0]);
 
-    const result = await service.findUsers(params);
+    const result = await service.listUsers(params);
 
-    expect(repositoryMock.findUsers).toHaveBeenCalledWith(params);
+    expect(repositoryMock.findMany).toHaveBeenCalledWith(params);
     expect(result).toEqual({ data: [], total: 0 });
   });
 
-  it('findOneByLogin delegates to repository', async () => {
-    repositoryMock.findUserByLogin.mockResolvedValue(null);
+  it('getPublicUserByLogin delegates to repository', async () => {
+    repositoryMock.findByLogin.mockResolvedValue(null);
 
-    await service.findOneByLogin('john');
+    await service.getPublicUserByLogin('john');
 
-    expect(repositoryMock.findUserByLogin).toHaveBeenCalledWith('john');
+    expect(repositoryMock.findByLogin).toHaveBeenCalledWith('john');
   });
 
-  it('createOne delegates to repository', async () => {
+  it('createUser delegates to repository', async () => {
     const dto: CreateUserDto = {
       login: 'john',
       email: 'john@example.com',
@@ -57,20 +57,20 @@ describe('UsersService', () => {
       age: 21,
       description: 'desc',
     };
-    repositoryMock.createUser.mockResolvedValue({
+    repositoryMock.create.mockResolvedValue({
       id: 1,
       ...dto,
       deletedAt: null,
     });
 
-    await service.createOne(dto);
+    await service.createUser(dto);
 
-    expect(repositoryMock.createUser).toHaveBeenCalledWith(dto);
+    expect(repositoryMock.create).toHaveBeenCalledWith(dto);
   });
 
-  it('putOne delegates to repository', async () => {
+  it('updateUser delegates to repository', async () => {
     const dto: UpdateUserDto = { description: 'updated' };
-    repositoryMock.putUser.mockResolvedValue({
+    repositoryMock.update.mockResolvedValue({
       id: 2,
       login: 'john',
       email: 'john@example.com',
@@ -80,16 +80,16 @@ describe('UsersService', () => {
       deletedAt: null,
     });
 
-    await service.putOne(2, dto);
+    await service.updateUser(2, dto);
 
-    expect(repositoryMock.putUser).toHaveBeenCalledWith(2, dto);
+    expect(repositoryMock.update).toHaveBeenCalledWith(2, dto);
   });
 
-  it('deleteOne delegates to repository', async () => {
-    repositoryMock.deleteUser.mockResolvedValue(undefined);
+  it('deleteUser delegates to repository', async () => {
+    repositoryMock.softDeleteById.mockResolvedValue(undefined);
 
-    await service.deleteOne(3);
+    await service.deleteUser(3);
 
-    expect(repositoryMock.deleteUser).toHaveBeenCalledWith(3);
+    expect(repositoryMock.softDeleteById).toHaveBeenCalledWith(3);
   });
 });

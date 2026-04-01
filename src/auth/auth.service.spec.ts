@@ -25,9 +25,10 @@ describe('AuthService', () => {
         {
           provide: UsersService,
           useValue: {
-            findOneByLogin: jest.fn(),
-            findOneById: jest.fn(),
-            createOne: jest.fn(),
+            getAuthUserByLogin: jest.fn(),
+            getPublicUserByLogin: jest.fn(),
+            getUserById: jest.fn(),
+            createUser: jest.fn(),
           },
         },
         {
@@ -63,7 +64,7 @@ describe('AuthService', () => {
       description: 'desc',
       deletedAt: null,
     };
-    usersService.findOneByLogin.mockResolvedValue(user);
+    usersService.getAuthUserByLogin.mockResolvedValue(user);
 
     const result = await service.signIn('john', 'secret', 'rt-1');
 
@@ -75,7 +76,7 @@ describe('AuthService', () => {
   });
 
   it('signIn should throw when user does not exist', async () => {
-    usersService.findOneByLogin.mockResolvedValue(null);
+    usersService.getAuthUserByLogin.mockResolvedValue(null);
 
     await expect(
       service.signIn('john', 'secret', 'rt-1'),
@@ -83,7 +84,7 @@ describe('AuthService', () => {
   });
 
   it('signIn should throw on invalid password', async () => {
-    usersService.findOneByLogin.mockResolvedValue({
+    usersService.getAuthUserByLogin.mockResolvedValue({
       id: 1,
       login: 'john',
       email: 'john@example.com',
@@ -99,7 +100,7 @@ describe('AuthService', () => {
   });
 
   it('signUp should throw conflict when login is taken', async () => {
-    usersService.findOneByLogin.mockResolvedValue({
+    usersService.getAuthUserByLogin.mockResolvedValue({
       id: 1,
       login: 'john',
       email: 'john@example.com',
@@ -141,10 +142,10 @@ describe('AuthService', () => {
       deletedAt: null,
     };
 
-    usersService.findOneByLogin
+    usersService.getAuthUserByLogin
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(storedUser);
-    usersService.createOne.mockImplementation((payload: CreateUserDto) => {
+    usersService.createUser.mockImplementation((payload: CreateUserDto) => {
       expect(compareSync(dto.password, payload.password)).toBe(true);
       return Promise.resolve(storedUser);
     });
@@ -152,7 +153,7 @@ describe('AuthService', () => {
     const result = await service.signUp(dto, 'rt-signup');
 
     expect(result).toEqual({ access_token: 'access-token' });
-    expect(usersService.createOne.mock.calls).toHaveLength(1);
+    expect(usersService.createUser.mock.calls).toHaveLength(1);
   });
 
   it('refresh should issue a new access token for an active refresh token', async () => {
@@ -166,8 +167,8 @@ describe('AuthService', () => {
       deletedAt: null,
     };
 
-    usersService.findOneByLogin.mockResolvedValue(user);
-    usersService.findOneById.mockResolvedValue(user);
+    usersService.getAuthUserByLogin.mockResolvedValue(user);
+    usersService.getUserById.mockResolvedValue(user);
 
     await service.signIn('refresh-user', 'secret', 'old-rt');
     const refreshed = await service.refresh('old-rt', 'new-rt');

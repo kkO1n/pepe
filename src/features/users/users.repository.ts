@@ -18,7 +18,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     return this.getRepository(User, entityManager);
   }
 
-  async findUsers({
+  async findMany({
     page,
     limit,
     login,
@@ -35,30 +35,30 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     });
   }
 
-  async findUserById(postId: number): Promise<User | null> {
+  async findById(userId: number): Promise<User | null> {
     return this.userRepository().findOne({
-      where: { id: postId },
+      where: { id: userId },
     });
   }
 
-  async findUserByLogin(login: string): Promise<User | null> {
+  async findByLogin(login: string): Promise<User | null> {
     return this.userRepository().findOne({
       where: { login },
     });
   }
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<User> {
     return this.userRepository().save(createUserDto);
   }
 
-  async putUser(id: number, putUserDto: UpdateUserDto): Promise<User> {
+  async update(id: number, putUserDto: UpdateUserDto): Promise<User> {
     return this.userRepository().save({
       id,
       ...putUserDto,
     });
   }
 
-  async deleteUser(id: number) {
+  async softDeleteById(id: number): Promise<void> {
     await this.userRepository().softDelete(id);
   }
 }

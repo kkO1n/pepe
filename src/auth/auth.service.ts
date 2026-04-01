@@ -30,7 +30,7 @@ export class AuthService {
     pass: string,
     refreshToken: string,
   ): Promise<{ access_token: string }> {
-    const user = await this.usersService.findOneByLogin(login);
+    const user = await this.usersService.getAuthUserByLogin(login);
 
     if (!user) throw new UnprocessableEntityException();
 
@@ -45,7 +45,7 @@ export class AuthService {
     createUserDto: CreateUserDto,
     refreshToken: string,
   ): Promise<{ access_token: string }> {
-    const existingUser = await this.usersService.findOneByLogin(
+    const existingUser = await this.usersService.getAuthUserByLogin(
       createUserDto.login,
     );
 
@@ -57,7 +57,7 @@ export class AuthService {
 
     if (!saltRounds) throw new UnauthorizedException();
 
-    await this.usersService.createOne({
+    await this.usersService.createUser({
       ...createUserDto,
       password: await hash(createUserDto.password, +saltRounds),
     });
@@ -75,7 +75,7 @@ export class AuthService {
     const userId = sessions[refreshToken];
 
     if (userId) {
-      const user = await this.usersService.findOneById(userId);
+      const user = await this.usersService.getUserById(userId);
 
       if (!user) throw new UnauthorizedException();
 
