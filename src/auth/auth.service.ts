@@ -2,12 +2,11 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
-  InternalServerErrorException,
-  UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { hash, compareSync } from 'bcryptjs';
+import { hash, compare } from 'bcryptjs';
+import { REFRESH_EXPIRES_AT } from 'src/common/constants';
 import { IUserSessionRepository } from 'src/common/interfaces/user-session-repository.interface';
 import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 import { UsersService } from 'src/features/users/users.service';
@@ -26,32 +25,18 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
-  getRefreshTokenMaxAgeMs(): number {
-    return this.getRefreshTokenTtlDays() * 24 * 60 * 60 * 1000;
-  }
-
-  async signIn(
-    login: string,
-    pass: string,
-    refreshToken: string,
-  ): Promise<{ access_token: string }> {
-    await this.userSessionRepository.deleteExpired(new Date());
-
+  async signIn(login: string, pass: string) {
+    await this.userSessionRepository.deleteExpired();
     const user = await this.usersService.getAuthUserByLogin(login);
 
-    if (!user) throw new UnprocessableEntityException();
-
-    if (!compareSync(pass, user.password)) {
+    if (!user || !(await compare(pass, user.password))) {
       throw new UnauthorizedException();
     }
 
-    return this.issueTokens(user, refreshToken);
+    return this.issueTokens(user);
   }
 
-  async signUp(
-    createUserDto: CreateUserDto,
-    refreshToken: string,
-  ): Promise<{ access_token: string }> {
+  async signUp(createUserDto: CreateUserDto) {
     const existingUser = await this.usersService.getAuthUserByLogin(
       createUserDto.login,
     );
@@ -59,29 +44,21 @@ export class AuthService {
     if (existingUser) {
       throw new ConflictException();
     }
-    const saltRounds: string | undefined =
-      this.configService.get('SALT_ROUNDS');
 
-    if (!saltRounds) throw new UnauthorizedException();
+    const saltRounds = +this.configService.get('SALT_ROUNDS');
 
     await this.usersService.createUser({
       ...createUserDto,
-      password: await hash(createUserDto.password, +saltRounds),
+      password: await hash(createUserDto.password, saltRounds),
     });
 
-    const payload = await this.signIn(
-      createUserDto.login,
-      createUserDto.password,
-      refreshToken,
-    );
-
-    return payload;
+    return await this.signIn(createUserDto.login, createUserDto.password);
   }
 
-  async refresh(refreshToken: string, newRefreshToken: string) {
+  async refresh(refreshToken: string) {
     const now = new Date();
-    await this.userSessionRepository.deleteExpired(now);
 
+    await this.userSessionRepository.deleteExpired(now);
     const session = await this.userSessionRepository.findValidByToken(
       refreshToken,
       now,
@@ -96,45 +73,30 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    return this.issueTokens(user, newRefreshToken);
+    return this.issueTokens(user);
   }
 
-  async logout(refreshToken?: string): Promise<void> {
-    await this.userSessionRepository.deleteExpired(new Date());
-
-    if (!refreshToken) return;
-
+  async logout(refreshToken: string): Promise<void> {
+    await this.userSessionRepository.deleteExpired();
     await this.userSessionRepository.deleteByToken(refreshToken);
   }
 
-  private async issueTokens(
-    user: { id: number; login: string },
-    refreshToken: string,
-  ) {
-    const expiresAt = new Date(Date.now() + this.getRefreshTokenMaxAgeMs());
+  private async issueTokens(user: { id: number; login: string }) {
+    const access_token = await this.jwtService.signAsync({
+      sub: user.id,
+      login: user.login,
+    });
+    const refresh_token = crypto.randomUUID();
+
     await this.userSessionRepository.upsertForUser(
       user.id,
-      refreshToken,
-      expiresAt,
+      refresh_token,
+      new Date(Date.now() + REFRESH_EXPIRES_AT),
     );
-
-    const payload: JwtPayload = { sub: user.id, login: user.login };
 
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      access_token,
+      refresh_token,
     };
-  }
-
-  private getRefreshTokenTtlDays(): number {
-    const configuredTtl = this.configService.get<string>(
-      'REFRESH_TOKEN_TTL_DAYS',
-    );
-    const ttlDays = Number(configuredTtl ?? '7');
-
-    if (!Number.isFinite(ttlDays) || ttlDays <= 0) {
-      throw new InternalServerErrorException();
-    }
-
-    return ttlDays;
   }
 }

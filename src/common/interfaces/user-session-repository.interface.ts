@@ -3,7 +3,7 @@ import { UserSession } from 'src/auth/entity/user-session.entity';
 export abstract class IUserSessionRepository {
   abstract findValidByToken(
     refreshToken: string,
-    now: Date,
+    now?: Date,
   ): Promise<UserSession | null>;
 
   abstract upsertForUser(
@@ -14,5 +14,5 @@ export abstract class IUserSessionRepository {
 
   abstract deleteByToken(refreshToken: string): Promise<void>;
 
-  abstract deleteExpired(now: Date): Promise<void>;
+  abstract deleteExpired(now?: Date): Promise<void>;
 }

@@ -28,7 +28,7 @@ export class UserSessionRepository
 
   async findValidByToken(
     refreshToken: string,
-    now: Date,
+    now: Date = new Date(),
   ): Promise<UserSession | null> {
     return this.sessionRepository().findOne({
       where: {
@@ -57,7 +57,7 @@ export class UserSessionRepository
     await this.sessionRepository().delete({ refreshToken });
   }
 
-  async deleteExpired(now: Date): Promise<void> {
+  async deleteExpired(now: Date = new Date()): Promise<void> {
     await this.sessionRepository().delete({
       expiresAt: LessThanOrEqual(now),
     });

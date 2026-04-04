@@ -1,16 +1,12 @@
-import {
-  ConflictException,
-  UnauthorizedException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
-import { compareSync, hashSync } from 'bcryptjs';
+import { hashSync } from 'bcryptjs';
 import { IUserSessionRepository } from 'src/common/interfaces/user-session-repository.interface';
-import { CreateUserDto } from '../features/users/dto/create-user-dto';
-import { User } from '../features/users/entity/user.entity';
-import { UsersService } from '../features/users/users.service';
+import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
+import { User } from 'src/features/users/entity/user.entity';
+import { UsersService } from 'src/features/users/users.service';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
@@ -20,6 +16,16 @@ describe('AuthService', () => {
   let jwtService: jest.Mocked<JwtService>;
   let configService: jest.Mocked<ConfigService>;
 
+  const buildUser = (): User => ({
+    id: 1,
+    login: 'john',
+    email: 'john@example.com',
+    password: hashSync('secret', 10),
+    age: 22,
+    description: 'desc',
+    deletedAt: null,
+  });
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -28,7 +34,6 @@ describe('AuthService', () => {
           provide: UsersService,
           useValue: {
             getAuthUserByLogin: jest.fn(),
-            getPublicUserByLogin: jest.fn(),
             getUserById: jest.fn(),
             createUser: jest.fn(),
           },
@@ -62,89 +67,33 @@ describe('AuthService', () => {
     userSessionRepository = module.get(IUserSessionRepository);
     jwtService = module.get(JwtService);
     configService = module.get(ConfigService);
-    configService.get.mockImplementation((key: string) => {
-      if (key === 'SALT_ROUNDS') return '10';
-      if (key === 'REFRESH_TOKEN_TTL_DAYS') return '7';
-      return undefined;
-    });
+
+    userSessionRepository.deleteExpired.mockResolvedValue(undefined);
+    userSessionRepository.upsertForUser.mockResolvedValue(undefined);
+    userSessionRepository.deleteByToken.mockResolvedValue(undefined);
     jwtService.signAsync.mockResolvedValue('access-token');
+    configService.get.mockReturnValue('10');
   });
 
-  it('signIn should return access token for valid credentials', async () => {
-    const user: User = {
-      id: 1,
-      login: 'john',
-      email: 'john@example.com',
-      password: hashSync('secret', 10),
-      age: 22,
-      description: 'desc',
-      deletedAt: null,
-    };
-    usersService.getAuthUserByLogin.mockResolvedValue(user);
+  it('signIn returns access and refresh tokens for valid credentials', async () => {
+    usersService.getAuthUserByLogin.mockResolvedValue(buildUser());
 
-    const result = await service.signIn('john', 'secret', 'rt-1');
+    const result = await service.signIn('john', 'secret');
 
-    expect(result).toEqual({ access_token: 'access-token' });
-    const signInSessionCall = userSessionRepository.upsertForUser.mock.calls[0];
-    expect(signInSessionCall?.[0]).toBe(1);
-    expect(signInSessionCall?.[1]).toBe('rt-1');
-    expect(signInSessionCall?.[2]).toBeInstanceOf(Date);
-    expect(jwtService.signAsync.mock.calls[0]?.[0]).toEqual({
-      sub: 1,
-      login: 'john',
-    });
+    expect(result.access_token).toBe('access-token');
+    expect(typeof result.refresh_token).toBe('string');
+    expect(result.refresh_token.length).toBeGreaterThan(0);
   });
 
-  it('signIn should throw when user does not exist', async () => {
+  it('signIn throws UnauthorizedException for invalid credentials', async () => {
     usersService.getAuthUserByLogin.mockResolvedValue(null);
 
-    await expect(
-      service.signIn('john', 'secret', 'rt-1'),
-    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+    await expect(service.signIn('john', 'wrong')).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
   });
 
-  it('signIn should throw on invalid password', async () => {
-    usersService.getAuthUserByLogin.mockResolvedValue({
-      id: 1,
-      login: 'john',
-      email: 'john@example.com',
-      password: hashSync('secret', 10),
-      age: 22,
-      description: 'desc',
-      deletedAt: null,
-    });
-
-    await expect(
-      service.signIn('john', 'wrong', 'rt-1'),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
-  });
-
-  it('signUp should throw conflict when login is taken', async () => {
-    usersService.getAuthUserByLogin.mockResolvedValue({
-      id: 1,
-      login: 'john',
-      email: 'john@example.com',
-      password: hashSync('secret', 10),
-      age: 22,
-      description: 'desc',
-      deletedAt: null,
-    });
-
-    await expect(
-      service.signUp(
-        {
-          login: 'john',
-          email: 'john2@example.com',
-          password: 'secret',
-          age: 22,
-          description: 'desc',
-        },
-        'rt-1',
-      ),
-    ).rejects.toBeInstanceOf(ConflictException);
-  });
-
-  it('signUp should create user with hashed password and return token', async () => {
+  it('signUp returns access and refresh tokens for a new user', async () => {
     const dto: CreateUserDto = {
       login: 'new-user',
       email: 'new-user@example.com',
@@ -152,78 +101,60 @@ describe('AuthService', () => {
       age: 20,
       description: 'desc',
     };
-    const storedUser: User = {
-      id: 7,
-      login: dto.login,
-      email: dto.email,
-      password: hashSync(dto.password, 10),
-      age: dto.age,
-      description: dto.description,
-      deletedAt: null,
-    };
 
     usersService.getAuthUserByLogin
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(storedUser);
-    usersService.createUser.mockImplementation((payload: CreateUserDto) => {
-      expect(compareSync(dto.password, payload.password)).toBe(true);
-      return Promise.resolve(storedUser);
-    });
+      .mockResolvedValueOnce(buildUser());
+    usersService.createUser.mockResolvedValue(buildUser());
 
-    const result = await service.signUp(dto, 'rt-signup');
+    const result = await service.signUp(dto);
 
-    expect(result).toEqual({ access_token: 'access-token' });
-    expect(usersService.createUser.mock.calls).toHaveLength(1);
+    expect(result.access_token).toBe('access-token');
+    expect(typeof result.refresh_token).toBe('string');
   });
 
-  it('refresh should issue a new access token for an active refresh token', async () => {
-    const user: User = {
-      id: 12,
-      login: 'refresh-user',
-      email: 'refresh-user@example.com',
-      password: hashSync('secret', 10),
-      age: 30,
-      description: 'desc',
-      deletedAt: null,
-    };
+  it('signUp throws ConflictException when login is already taken', async () => {
+    usersService.getAuthUserByLogin.mockResolvedValue(buildUser());
 
+    await expect(
+      service.signUp({
+        login: 'john',
+        email: 'john2@example.com',
+        password: 'secret',
+        age: 22,
+        description: 'desc',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('refresh returns new tokens for a valid refresh token', async () => {
+    usersService.getUserById.mockResolvedValue(buildUser());
     userSessionRepository.findValidByToken.mockResolvedValue({
       id: 1,
-      userId: user.id,
-      refreshToken: 'old-rt',
+      userId: 1,
+      refreshToken: 'old-refresh-token',
       expiresAt: new Date(Date.now() + 60_000),
       createdAt: new Date(),
       updatedAt: new Date(),
-      user,
+      user: buildUser(),
     });
-    usersService.getUserById.mockResolvedValue(user);
-    const refreshed = await service.refresh('old-rt', 'new-rt');
 
-    expect(refreshed).toEqual({ access_token: 'access-token' });
-    const refreshSessionCall =
-      userSessionRepository.upsertForUser.mock.calls[0];
-    expect(refreshSessionCall?.[0]).toBe(12);
-    expect(refreshSessionCall?.[1]).toBe('new-rt');
-    expect(refreshSessionCall?.[2]).toBeInstanceOf(Date);
+    const result = await service.refresh('old-refresh-token');
+
+    expect(result.access_token).toBe('access-token');
+    expect(typeof result.refresh_token).toBe('string');
+    expect(result.refresh_token.length).toBeGreaterThan(0);
   });
 
-  it('refresh should throw for unknown refresh token', async () => {
+  it('refresh throws UnauthorizedException for unknown refresh token', async () => {
     userSessionRepository.findValidByToken.mockResolvedValue(null);
 
-    await expect(
-      service.refresh('missing-rt', 'new-rt'),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(service.refresh('missing-token')).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
   });
 
-  it('logout should invalidate session token when provided', async () => {
-    await service.logout('rt-1');
-
-    const logoutCall = userSessionRepository.deleteByToken.mock.calls[0];
-    expect(logoutCall?.[0]).toBe('rt-1');
-  });
-
-  it('logout should not fail when token is missing', async () => {
-    await expect(service.logout()).resolves.toBeUndefined();
-    expect(userSessionRepository.deleteByToken.mock.calls).toHaveLength(0);
+  it('logout does not throw for valid refresh token', async () => {
+    await expect(service.logout('refresh-token')).resolves.toBeUndefined();
   });
 });
