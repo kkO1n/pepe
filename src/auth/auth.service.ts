@@ -10,6 +10,7 @@ import { REFRESH_EXPIRES_AT } from 'src/common/constants';
 import { IUserSessionRepository } from 'src/common/interfaces/user-session-repository.interface';
 import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 import { UsersService } from 'src/features/users/users.service';
+import * as crypto from 'crypto';
 
 export type JwtPayload = {
   sub: number;
@@ -55,12 +56,13 @@ export class AuthService {
     return await this.signIn(createUserDto.login, createUserDto.password);
   }
 
-  async refresh(refreshToken: string) {
+  async refresh(refresh_token: string) {
     const now = new Date();
+    const hashedRefreshToken = this.hashRefreshToken(refresh_token);
 
     await this.userSessionRepository.deleteExpired(now);
     const session = await this.userSessionRepository.findValidByToken(
-      refreshToken,
+      hashedRefreshToken,
       now,
     );
 
@@ -69,16 +71,18 @@ export class AuthService {
     const user = await this.usersService.getUserById(session.userId);
 
     if (!user) {
-      await this.userSessionRepository.deleteByToken(refreshToken);
+      await this.userSessionRepository.deleteByToken(hashedRefreshToken);
       throw new UnauthorizedException();
     }
 
     return this.issueTokens(user);
   }
 
-  async logout(refreshToken: string): Promise<void> {
+  async logout(refresh_token: string): Promise<void> {
+    const hashedRefreshToken = this.hashRefreshToken(refresh_token);
+
     await this.userSessionRepository.deleteExpired();
-    await this.userSessionRepository.deleteByToken(refreshToken);
+    await this.userSessionRepository.deleteByToken(hashedRefreshToken);
   }
 
   private async issueTokens(user: { id: number; login: string }) {
@@ -86,11 +90,13 @@ export class AuthService {
       sub: user.id,
       login: user.login,
     });
-    const refresh_token = crypto.randomUUID();
+
+    const refresh_token = crypto.randomBytes(32).toString('hex');
+    const hashedRefreshToken = this.hashRefreshToken(refresh_token);
 
     await this.userSessionRepository.upsertForUser(
       user.id,
-      refresh_token,
+      hashedRefreshToken,
       new Date(Date.now() + REFRESH_EXPIRES_AT),
     );
 
@@ -98,5 +104,13 @@ export class AuthService {
       access_token,
       refresh_token,
     };
+  }
+
+  private hashRefreshToken(token: string) {
+    const secret = this.configService.getOrThrow<string>(
+      'REFRESH_TOKEN_HASH_SECRET',
+    );
+
+    return crypto.createHmac('sha256', secret).update(token).digest('hex');
   }
 }

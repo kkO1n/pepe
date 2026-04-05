@@ -7,7 +7,6 @@ import {
   IsString,
   Max,
   Min,
-  MinLength,
   validateSync,
 } from 'class-validator';
 
@@ -22,7 +21,12 @@ export class EnvironmentVariables {
   NODE_ENV: Environment = Environment.Development;
 
   @IsString()
+  @IsNotEmpty()
   JWT_SECRET!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  REFRESH_TOKEN_HASH_SECRET!: string;
 
   @Type(() => Number)
   @IsInt()

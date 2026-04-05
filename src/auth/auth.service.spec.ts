@@ -8,6 +8,13 @@ import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 import { User } from 'src/features/users/entity/user.entity';
 import { UsersService } from 'src/features/users/users.service';
 import { AuthService } from './auth.service';
+import * as crypto from 'crypto';
+
+const hashToken = (token: string) =>
+  crypto
+    .createHmac('sha256', 'test-refresh-secret')
+    .update(token)
+    .digest('hex');
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -57,6 +64,7 @@ describe('AuthService', () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn(),
+            getOrThrow: jest.fn(),
           },
         },
       ],
@@ -72,7 +80,18 @@ describe('AuthService', () => {
     userSessionRepository.upsertForUser.mockResolvedValue(undefined);
     userSessionRepository.deleteByToken.mockResolvedValue(undefined);
     jwtService.signAsync.mockResolvedValue('access-token');
-    configService.get.mockReturnValue('10');
+
+    const configMap: Record<string, string> = {
+      SALT_ROUNDS: '10',
+      REFRESH_TOKEN_HASH_SECRET: 'test-refresh-secret',
+    };
+
+    configService.get.mockImplementation((key: string) => configMap[key]);
+    configService.getOrThrow.mockImplementation((key: string) => {
+      const value = configMap[key];
+      if (value === undefined) throw new Error(`Unexpected config key: ${key}`);
+      return value;
+    });
   });
 
   it('signIn returns access and refresh tokens for valid credentials', async () => {
@@ -83,6 +102,12 @@ describe('AuthService', () => {
     expect(result.access_token).toBe('access-token');
     expect(typeof result.refresh_token).toBe('string');
     expect(result.refresh_token.length).toBeGreaterThan(0);
+    const [userId, tokenHash, expiresAt] =
+      userSessionRepository.upsertForUser.mock.calls[0] ?? [];
+
+    expect(userId).toBe(1);
+    expect(tokenHash).toBe(hashToken(result.refresh_token));
+    expect(expiresAt).toBeInstanceOf(Date);
   });
 
   it('signIn throws UnauthorizedException for invalid credentials', async () => {
@@ -128,22 +153,29 @@ describe('AuthService', () => {
   });
 
   it('refresh returns new tokens for a valid refresh token', async () => {
+    const refreshToken = 'old-refresh-token';
+
     usersService.getUserById.mockResolvedValue(buildUser());
     userSessionRepository.findValidByToken.mockResolvedValue({
       id: 1,
       userId: 1,
-      refreshToken: 'old-refresh-token',
+      refreshToken: hashToken(refreshToken),
       expiresAt: new Date(Date.now() + 60_000),
       createdAt: new Date(),
       updatedAt: new Date(),
       user: buildUser(),
     });
 
-    const result = await service.refresh('old-refresh-token');
+    const result = await service.refresh(refreshToken);
 
     expect(result.access_token).toBe('access-token');
     expect(typeof result.refresh_token).toBe('string');
     expect(result.refresh_token.length).toBeGreaterThan(0);
+    const [lookupTokenHash, lookupNow] =
+      userSessionRepository.findValidByToken.mock.calls[0] ?? [];
+
+    expect(lookupTokenHash).toBe(hashToken(refreshToken));
+    expect(lookupNow).toBeInstanceOf(Date);
   });
 
   it('refresh throws UnauthorizedException for unknown refresh token', async () => {
@@ -155,6 +187,12 @@ describe('AuthService', () => {
   });
 
   it('logout does not throw for valid refresh token', async () => {
-    await expect(service.logout('refresh-token')).resolves.toBeUndefined();
+    const refreshToken = 'refresh-token';
+
+    await expect(service.logout(refreshToken)).resolves.toBeUndefined();
+    const [deletedTokenHash] =
+      userSessionRepository.deleteByToken.mock.calls[0] ?? [];
+
+    expect(deletedTokenHash).toBe(hashToken(refreshToken));
   });
 });

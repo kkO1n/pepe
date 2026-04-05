@@ -8,6 +8,10 @@ if (!process.env.SALT_ROUNDS) {
   process.env.SALT_ROUNDS = '10';
 }
 
+if (!process.env.REFRESH_TOKEN_HASH_SECRET) {
+  process.env.REFRESH_TOKEN_HASH_SECRET = 'thetestiesthashiesthashsecret';
+}
+
 if (!process.env.REFRESH_TOKEN_TTL_DAYS) {
   process.env.REFRESH_TOKEN_TTL_DAYS = '7';
 }
