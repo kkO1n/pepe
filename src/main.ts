@@ -3,9 +3,13 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useLogger(app.get(Logger));
+
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({

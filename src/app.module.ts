@@ -5,7 +5,8 @@ import { AppController } from './app.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validate } from './env.validation';
 import { JwtModule } from '@nestjs/jwt';
-
+import { LoggerModule } from 'nestjs-pino';
+import { randomUUID } from 'crypto';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,6 +21,13 @@ import { JwtModule } from '@nestjs/jwt';
         signOptions: { expiresIn: '5m' },
       }),
       global: true,
+    }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        genReqId(req) {
+          return req.headers['x-request-id'] || randomUUID();
+        },
+      },
     }),
     UsersModule,
     AuthModule,
