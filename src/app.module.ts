@@ -7,6 +7,8 @@ import { validate } from './env.validation';
 import { JwtModule } from '@nestjs/jwt';
 import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
+import { APP_FILTER } from '@nestjs/core';
+import { DBExceptionFilter } from './common/filters/db-exception.filter';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,6 +33,12 @@ import { randomUUID } from 'crypto';
     }),
     UsersModule,
     AuthModule,
+  ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: DBExceptionFilter,
+    },
   ],
   controllers: [AppController],
 })
