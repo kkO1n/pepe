@@ -9,7 +9,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useLogger(app.get(Logger));
-
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
@@ -30,6 +29,7 @@ async function bootstrap() {
     .addTag('pepe')
     .addBearerAuth()
     .build();
+
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
