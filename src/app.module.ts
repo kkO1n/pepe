@@ -9,6 +9,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import { APP_FILTER } from '@nestjs/core';
 import { DBExceptionFilter } from './common/filters/db-exception.filter';
+import { S3Module } from './providers/files/s3/s3.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,6 +32,7 @@ import { DBExceptionFilter } from './common/filters/db-exception.filter';
         },
       },
     }),
+    S3Module,
     UsersModule,
     AuthModule,
   ],

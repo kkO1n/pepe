@@ -2,6 +2,7 @@ import './test-env';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
+import { PARAMS_PROVIDER_TOKEN } from 'nestjs-pino';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import {
@@ -102,7 +103,15 @@ describe('App (e2e)', () => {
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PARAMS_PROVIDER_TOKEN)
+      .useValue({
+        pinoHttp: {
+          level: 'silent',
+          autoLogging: false,
+        },
+      })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.use(cookieParser());
