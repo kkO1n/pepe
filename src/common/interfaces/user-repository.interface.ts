@@ -1,7 +1,7 @@
-import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
-import { GetUsersQueryDto } from 'src/features/users/dto/get-users-query-dto';
-import { UpdateUserDto } from 'src/features/users/dto/update-user-dto';
-import { User } from 'src/features/users/entity/user.entity';
+import type { CreateUserDto } from 'src/features/users/dto/create-user-dto';
+import type { GetUsersQueryDto } from 'src/features/users/dto/get-users-query-dto';
+import type { UpdateUserDto } from 'src/features/users/dto/update-user-dto';
+import type { User } from 'src/features/users/entity/user.entity';
 
 export abstract class IUserRepository {
   abstract findMany(params: GetUsersQueryDto): Promise<[User[], number]>;

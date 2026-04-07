@@ -1,9 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
-import { CreateUserDto } from './dto/create-user-dto';
-import { GetUsersQueryDto } from './dto/get-users-query-dto';
-import { UpdateUserDto } from './dto/update-user-dto';
-import { User } from './entity/user.entity';
+import type { CreateUserDto } from './dto/create-user-dto';
+import type { GetUsersQueryDto } from './dto/get-users-query-dto';
+import type { UpdateUserDto } from './dto/update-user-dto';
+import type { User } from './entity/user.entity';
 import { UsersService } from './users.service';
 
 describe('UsersService', () => {

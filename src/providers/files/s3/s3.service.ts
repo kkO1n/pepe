@@ -1,40 +1,20 @@
-import * as AWS from '@aws-sdk/client-s3';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { IFileService } from '../files.adapter';
-import { S3Lib } from './constants/do-spaces-service-lib.constant';
+import { type IFileService } from '../files.adapter';
 import { RemoveException } from './exceptions/remove.exception';
 import { UploadException } from './exceptions/upload.exception';
 import { UploadFilePayloadDto } from './dto/upload-file-payload.dto';
 import { UploadFileResultDto } from './dto/upload-file-result.dto';
 import { RemoveFilePayloadDto } from './dto/remove-file-payload.dto';
+import { S3Lib } from './constants/do-spaces-service-lib.constant';
+import * as AWS from '@aws-sdk/client-s3';
 
 @Injectable()
-export class S3Service extends IFileService {
+export class S3Service implements IFileService {
   private readonly logger = new Logger(S3Service.name);
+  private readonly bucketName = 'dabucket';
 
-  private readonly bucketName = '';
-
-  private getErrorMessage(error: unknown): string | undefined {
-    if (error instanceof Error) {
-      return error.message;
-    }
-
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'message' in error &&
-      typeof error.message === 'string'
-    ) {
-      return error.message;
-    }
-
-    return undefined;
-  }
-
-  constructor(@Inject(S3Lib) private readonly S3: AWS.S3) {
-    super();
-  }
+  constructor(@Inject(S3Lib) private readonly s3: AWS.S3) {}
 
   async uploadFile(dto: UploadFilePayloadDto): Promise<UploadFileResultDto> {
     const { folder, file, name } = dto;
@@ -43,7 +23,7 @@ export class S3Service extends IFileService {
     this.logger.log('📁 Beginning of uploading file to bucket');
 
     return new Promise((resolve, reject) => {
-      this.S3.putObject(
+      this.s3.putObject(
         {
           Bucket: this.bucketName,
           Key: path,
@@ -72,7 +52,7 @@ export class S3Service extends IFileService {
     this.logger.log('🗑️ Beginning of removing file from bucket');
 
     return new Promise((resolve, reject) => {
-      this.S3.deleteObject(
+      this.s3.deleteObject(
         {
           Bucket: this.bucketName,
           Key: path,
@@ -88,5 +68,22 @@ export class S3Service extends IFileService {
         },
       );
     });
+  }
+
+  private getErrorMessage(error: unknown): string | undefined {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof error.message === 'string'
+    ) {
+      return error.message;
+    }
+
+    return undefined;
   }
 }

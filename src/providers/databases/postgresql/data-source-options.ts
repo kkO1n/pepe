@@ -1,6 +1,6 @@
 import { UserSession } from '../../../auth/entity/user-session.entity';
 import { User } from '../../../features/users/entity/user.entity';
-import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
 function parsePort(value: string | undefined, fallback: number): number {
   const parsed = Number(value);

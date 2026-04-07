@@ -1,5 +1,6 @@
-import * as AWS from '@aws-sdk/client-s3';
-import { Test, TestingModule } from '@nestjs/testing';
+import type * as AWS from '@aws-sdk/client-s3';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 
 import { S3Lib } from './constants/do-spaces-service-lib.constant';
 import { S3Service } from './s3.service';

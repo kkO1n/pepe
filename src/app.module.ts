@@ -10,6 +10,7 @@ import { randomUUID } from 'crypto';
 import { APP_FILTER } from '@nestjs/core';
 import { DBExceptionFilter } from './common/filters/db-exception.filter';
 import { S3Module } from './providers/files/s3/s3.module';
+import { AvatarsModule } from './features/avatars/avatars.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -35,6 +36,7 @@ import { S3Module } from './providers/files/s3/s3.module';
     S3Module,
     UsersModule,
     AuthModule,
+    AvatarsModule,
   ],
   providers: [
     {

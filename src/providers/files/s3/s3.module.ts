@@ -14,8 +14,8 @@ import { S3Service } from './s3.service';
           endpoint: 'http://127.0.0.1:9000',
           region: 'ru-central1',
           credentials: {
-            accessKeyId: 'УКАЖИ',
-            secretAccessKey: 'УКАЖИ',
+            accessKeyId: '20DEL7L8C9TMIM2TL6T7',
+            secretAccessKey: 'wOauR+lhOYHpljy+UPylLAvTiQouz+AdyieaOAPp',
           },
         });
       },

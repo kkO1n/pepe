@@ -1,11 +1,12 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { hashSync } from 'bcryptjs';
 import { IUserSessionRepository } from 'src/common/interfaces/user-session-repository.interface';
-import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
-import { User } from 'src/features/users/entity/user.entity';
+import type { CreateUserDto } from 'src/features/users/dto/create-user-dto';
+import type { User } from 'src/features/users/entity/user.entity';
 import { UsersService } from 'src/features/users/users.service';
 import { AuthService } from './auth.service';
 import * as crypto from 'crypto';

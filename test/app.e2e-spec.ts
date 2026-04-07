@@ -1,6 +1,8 @@
 import './test-env';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import type { INestApplication } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import { PARAMS_PROVIDER_TOKEN } from 'nestjs-pino';
 import request from 'supertest';

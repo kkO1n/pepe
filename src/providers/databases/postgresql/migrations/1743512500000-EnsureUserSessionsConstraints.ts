@@ -1,10 +1,5 @@
-import {
-  MigrationInterface,
-  QueryRunner,
-  TableForeignKey,
-  TableIndex,
-  TableUnique,
-} from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { TableForeignKey, TableIndex, TableUnique } from 'typeorm';
 
 export class EnsureUserSessionsConstraints1743512500000 implements MigrationInterface {
   name = 'EnsureUserSessionsConstraints1743512500000';
