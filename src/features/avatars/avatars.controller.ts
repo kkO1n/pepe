@@ -1,6 +1,10 @@
 import {
   BadRequestException,
   Controller,
+  Delete,
+  HttpCode,
+  Param,
+  ParseIntPipe,
   Post,
   UploadedFile,
   UseGuards,
@@ -32,5 +36,11 @@ export class AvatarsController {
     }
 
     return this.avatarsService.uploadAvatar(file, login, sub);
+  }
+
+  @Delete(':avatarId')
+  @HttpCode(204)
+  deleteAvatar(@Param('avatarId', ParseIntPipe) avatarId: number) {
+    return this.avatarsService.deleteAvatar(avatarId);
   }
 }

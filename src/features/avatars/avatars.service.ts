@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { IAvatarsRepository } from 'src/common/interfaces/avatars-repository.interface';
 import {
   FILE_SERVICE,
@@ -28,9 +28,12 @@ export class AvatarsService {
     });
   }
 
-  deleteAvatar(path: string) {
-    return this.files.removeFile({
-      path,
-    });
+  async deleteAvatar(avatarId: number) {
+    const path = await this.avatarsRepository.getPathByAvatarId(avatarId);
+    if (!path) throw new BadRequestException();
+
+    await this.files.removeFile({ path });
+
+    return await this.avatarsRepository.softDelete(avatarId);
   }
 }

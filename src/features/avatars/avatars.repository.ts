@@ -22,6 +22,20 @@ export class AvatarsRepository
   async create(dto: Partial<Avatars>) {
     const createdAvatar = await this.avatarsRepository().save(dto);
 
-    return { path: createdAvatar.url };
+    return { path: createdAvatar.url, avatarId: createdAvatar.id };
+  }
+
+  async softDelete(avatarId: number) {
+    await this.avatarsRepository().softDelete(avatarId);
+  }
+
+  async getPathByAvatarId(avatarId: number): Promise<string | null> {
+    const avatar = await this.avatarsRepository().findOne({
+      where: { id: avatarId },
+    });
+
+    if (!avatar) return null;
+
+    return avatar?.url;
   }
 }
