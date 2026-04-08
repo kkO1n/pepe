@@ -5,7 +5,7 @@ export class CreateUsersTable1743512450000 implements MigrationInterface {
   name = 'CreateUsersTable1743512450000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    const hasUsersTable = await queryRunner.hasTable('user');
+    const hasUsersTable = await queryRunner.hasTable('users');
 
     if (hasUsersTable) {
       return;
@@ -13,7 +13,7 @@ export class CreateUsersTable1743512450000 implements MigrationInterface {
 
     await queryRunner.createTable(
       new Table({
-        name: 'user',
+        name: 'users',
         columns: [
           {
             name: 'id',

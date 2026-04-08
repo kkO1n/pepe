@@ -63,7 +63,7 @@ export class EnsureUserSessionsConstraints1743512500000 implements MigrationInte
         new TableForeignKey({
           name: 'FK_user_sessions_user_id',
           columnNames: ['userId'],
-          referencedTableName: 'user',
+          referencedTableName: 'users',
           referencedColumnNames: ['id'],
           onDelete: 'CASCADE',
         }),

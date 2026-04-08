@@ -1,4 +1,3 @@
-import './test-env';
 import type { INestApplication } from '@nestjs/common';
 import { ValidationPipe } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
@@ -12,6 +11,7 @@ import {
   ensureTestDatabase,
   runMigrations,
 } from './helpers/db-cleanup';
+import './test-env';
 
 describe('App (e2e)', () => {
   let app: INestApplication;

@@ -1,17 +1,19 @@
 import type { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 import type { GetUsersQueryDto } from 'src/features/users/dto/get-users-query-dto';
 import type { UpdateUserDto } from 'src/features/users/dto/update-user-dto';
-import type { User } from 'src/features/users/entity/user.entity';
+import type { Users } from 'src/features/users/entity/user.entity';
 
 export abstract class IUserRepository {
   abstract findManyByActivity(
     minAge: number,
     maxAge: number,
-  ): Promise<[User[], number]>;
-  abstract findManyByLogin(params: GetUsersQueryDto): Promise<[User[], number]>;
-  abstract findById(userId: number): Promise<User | null>;
-  abstract findByLogin(login: string): Promise<User | null>;
-  abstract create(createUserDto: CreateUserDto): Promise<User>;
-  abstract update(id: number, createUserDto: UpdateUserDto): Promise<User>;
+  ): Promise<[Users[], number]>;
+  abstract findManyByLogin(
+    params: GetUsersQueryDto,
+  ): Promise<[Users[], number]>;
+  abstract findById(userId: number): Promise<Users | null>;
+  abstract findByLogin(login: string): Promise<Users | null>;
+  abstract create(createUserDto: CreateUserDto): Promise<Users>;
+  abstract update(id: number, createUserDto: UpdateUserDto): Promise<Users>;
   abstract softDeleteById(id: number): Promise<void>;
 }

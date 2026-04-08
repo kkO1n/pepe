@@ -6,7 +6,7 @@ import { BaseRepository } from '../base.repository';
 import { CreateUserDto } from './dto/create-user-dto';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
-import { User } from './entity/user.entity';
+import { Users } from './entity/user.entity';
 
 @Injectable()
 export class UserRepository extends BaseRepository implements IUserRepository {
@@ -14,8 +14,8 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     super(dataSource);
   }
 
-  private userRepository(entityManager?: EntityManager): Repository<User> {
-    return this.getRepository(User, entityManager);
+  private userRepository(entityManager?: EntityManager): Repository<Users> {
+    return this.getRepository(Users, entityManager);
   }
 
   async findManyByActivity(minAge: number, maxAge: number) {
@@ -43,7 +43,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     page,
     limit,
     login,
-  }: GetUsersQueryDto): Promise<[User[], number]> {
+  }: GetUsersQueryDto): Promise<[Users[], number]> {
     const currentPage = page ?? 1;
     const pageSize = limit ?? 10;
     const trimmedLogin = login?.trim();
@@ -56,23 +56,23 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     });
   }
 
-  async findById(userId: number): Promise<User | null> {
+  async findById(userId: number): Promise<Users | null> {
     return this.userRepository().findOne({
       where: { id: userId },
     });
   }
 
-  async findByLogin(login: string): Promise<User | null> {
+  async findByLogin(login: string): Promise<Users | null> {
     return this.userRepository().findOne({
       where: { login },
     });
   }
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<Users> {
     return this.userRepository().save(createUserDto);
   }
 
-  async update(id: number, putUserDto: UpdateUserDto): Promise<User> {
+  async update(id: number, putUserDto: UpdateUserDto): Promise<Users> {
     return this.userRepository().save({
       id,
       ...putUserDto,

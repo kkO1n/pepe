@@ -3,12 +3,14 @@ import {
   Column,
   DeleteDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity()
-export class User {
+@Entity('users')
+@Index('idx_users_login_age_id', ['login', 'age', 'id'])
+export class Users {
   @PrimaryGeneratedColumn()
   id: number;
 
