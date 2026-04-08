@@ -1,3 +1,4 @@
+import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 import {
   Body,
   Controller,
@@ -9,9 +10,11 @@ import {
   Put,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { CurrentUser } from 'src/common/decorators/current-user';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { UsersService } from './users.service';
@@ -24,8 +27,21 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get()
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30)
+  @CacheKey('users:list')
   getUsers(@Query() query: GetUsersQueryDto) {
     return this.usersService.listUsers(query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Get('me')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(30)
+  @CacheKey('users:me')
+  async getProfile(@CurrentUser('login') login: string) {
+    return await this.usersService.getPublicUserByLogin(login);
   }
 
   @Get('active')

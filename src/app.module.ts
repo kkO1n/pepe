@@ -1,10 +1,13 @@
+import KeyvRedis from '@keyv/redis';
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { CacheableMemory } from 'cacheable';
 import { randomUUID } from 'crypto';
+import { Keyv } from 'keyv';
 import { LoggerModule } from 'nestjs-pino';
-import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { DBExceptionFilter } from './common/filters/db-exception.filter';
 import { validate } from './env.validation';
@@ -12,6 +15,7 @@ import { AvatarsModule } from './features/avatars/avatars.module';
 import { UsersModule } from './features/users/users.module';
 import { RedisModule } from './providers/databases/redis/redis.module';
 import { S3Module } from './providers/files/s3/s3.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -37,6 +41,23 @@ import { S3Module } from './providers/files/s3/s3.module';
         },
       },
     }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          stores: [
+            new Keyv({
+              store: new CacheableMemory({ ttl: 60000, lruSize: 5000 }),
+            }),
+            new KeyvRedis(
+              `redis://${configService.getOrThrow('REDIS_HOST')}:${configService.getOrThrow('REDIS_PORT')}`,
+            ),
+          ],
+        };
+      },
+    }),
     S3Module,
     UsersModule,
     AuthModule,
@@ -49,6 +70,5 @@ import { S3Module } from './providers/files/s3/s3.module';
       useClass: DBExceptionFilter,
     },
   ],
-  controllers: [AppController],
 })
 export class AppModule {}
