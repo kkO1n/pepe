@@ -10,6 +10,7 @@ import { DBExceptionFilter } from './common/filters/db-exception.filter';
 import { validate } from './env.validation';
 import { AvatarsModule } from './features/avatars/avatars.module';
 import { UsersModule } from './features/users/users.module';
+import { RedisModule } from './providers/databases/redis/redis.module';
 import { S3Module } from './providers/files/s3/s3.module';
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { S3Module } from './providers/files/s3/s3.module';
     UsersModule,
     AuthModule,
     AvatarsModule,
+    RedisModule,
   ],
   providers: [
     {
