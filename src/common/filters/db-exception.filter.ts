@@ -3,14 +3,19 @@ import {
   Catch,
   ExceptionFilter,
   HttpStatus,
+  Injectable,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { Logger } from 'nestjs-pino';
 import { QueryFailedError } from 'typeorm';
 
 type PgDriverError = { code?: string };
 
+@Injectable()
 @Catch(QueryFailedError)
 export class DBExceptionFilter implements ExceptionFilter {
+  constructor(private readonly logger: Logger) {}
+
   catch(
     exception: QueryFailedError & { driverError?: PgDriverError },
     host: ArgumentsHost,
@@ -20,6 +25,16 @@ export class DBExceptionFilter implements ExceptionFilter {
     const res = ctx.getResponse<Response>();
 
     const pgCode = exception.driverError?.code;
+
+    this.logger.error(
+      {
+        path: req.url,
+        method: req.method,
+        pgCode: exception.driverError?.code,
+        err: exception,
+      },
+      'Database query failed',
+    );
 
     const mapped = {
       '23505': {

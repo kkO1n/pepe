@@ -38,4 +38,12 @@ export class AvatarsRepository
 
     return avatar?.url;
   }
+
+  async getAvatarsByUserId(userId: number) {
+    return await this.avatarsRepository().findAndCount({
+      where: {
+        userId,
+      },
+    });
+  }
 }

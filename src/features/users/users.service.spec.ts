@@ -28,7 +28,7 @@ describe('UsersService', () => {
         {
           provide: IUserRepository,
           useValue: {
-            findMany: jest.fn(),
+            findManyByLogin: jest.fn(),
             findById: jest.fn(),
             findByLogin: jest.fn(),
             create: jest.fn(),
@@ -44,7 +44,7 @@ describe('UsersService', () => {
   });
 
   it('listUsers returns paginated public users', async () => {
-    userRepository.findMany.mockResolvedValue([[buildUser()], 1]);
+    userRepository.findManyByLogin.mockResolvedValue([[buildUser()], 1]);
     const query: GetUsersQueryDto = { page: 1, limit: 10 };
 
     const result = await service.listUsers(query);

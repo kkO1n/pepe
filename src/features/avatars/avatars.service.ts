@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { IAvatarsRepository } from 'src/common/interfaces/avatars-repository.interface';
 import {
   FILE_SERVICE,
@@ -14,6 +19,10 @@ export class AvatarsService {
   ) {}
 
   async uploadAvatar(file: IUploadedMulterFile, login: string, userId: number) {
+    const [, avatarsCount] =
+      await this.avatarsRepository.getAvatarsByUserId(userId);
+    if (avatarsCount >= 5) throw new ConflictException();
+
     const fileKey = crypto.randomUUID();
 
     const { path } = await this.files.uploadFile({

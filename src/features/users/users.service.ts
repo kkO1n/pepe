@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
 import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
@@ -7,7 +8,6 @@ import {
   PaginatedUsersResponseDto,
   UserResponseDto,
 } from './dto/user-response-dto';
-import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
@@ -16,13 +16,17 @@ export class UsersService {
   async listUsers(
     params: GetUsersQueryDto,
   ): Promise<PaginatedUsersResponseDto> {
-    const [data, total] = await this.userRepository.findMany(params);
+    const [data, total] = await this.userRepository.findManyByLogin(params);
 
     return plainToInstance(
       PaginatedUsersResponseDto,
       { data, total },
       { excludeExtraneousValues: true },
     );
+  }
+
+  async listActiveUsers(minAge: number, maxAge: number) {
+    return await this.userRepository.findManyByActivity(minAge, maxAge);
   }
 
   async getUserById(userId: number) {

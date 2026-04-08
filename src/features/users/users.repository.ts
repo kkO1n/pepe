@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DataSource, EntityManager, ILike, Repository } from 'typeorm';
-import { User } from './entity/user.entity';
-import { BaseRepository } from '../base.repository';
-import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
-import { CreateUserDto } from './dto/create-user-dto';
 import { DATA_SOURCE } from 'src/common/constants';
+import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
+import { DataSource, EntityManager, ILike, Repository } from 'typeorm';
+import { BaseRepository } from '../base.repository';
+import { CreateUserDto } from './dto/create-user-dto';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
+import { User } from './entity/user.entity';
 
 @Injectable()
 export class UserRepository extends BaseRepository implements IUserRepository {
@@ -18,7 +18,28 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     return this.getRepository(User, entityManager);
   }
 
-  async findMany({
+  async findManyByActivity(minAge: number, maxAge: number) {
+    return await this.userRepository()
+      .createQueryBuilder('u')
+      .where('u.age BETWEEN :minAge AND :maxAge', { minAge, maxAge })
+      .andWhere(`NULLIF(TRIM(u.description), '') IS NOT NULL`)
+      .andWhere(
+        `
+      EXISTS (
+        SELECT 1
+        FROM avatars a
+        WHERE a."userId" = u.id
+          AND a."deletedAt" IS NULL
+        GROUP BY a."userId"
+        HAVING COUNT(a.id) > 2
+      )
+    `,
+      )
+      .orderBy('u.id', 'ASC')
+      .getManyAndCount();
+  }
+
+  async findManyByLogin({
     page,
     limit,
     login,

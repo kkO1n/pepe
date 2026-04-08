@@ -4,7 +4,11 @@ import type { UpdateUserDto } from 'src/features/users/dto/update-user-dto';
 import type { User } from 'src/features/users/entity/user.entity';
 
 export abstract class IUserRepository {
-  abstract findMany(params: GetUsersQueryDto): Promise<[User[], number]>;
+  abstract findManyByActivity(
+    minAge: number,
+    maxAge: number,
+  ): Promise<[User[], number]>;
+  abstract findManyByLogin(params: GetUsersQueryDto): Promise<[User[], number]>;
   abstract findById(userId: number): Promise<User | null>;
   abstract findByLogin(login: string): Promise<User | null>;
   abstract create(createUserDto: CreateUserDto): Promise<User>;
