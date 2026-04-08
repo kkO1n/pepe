@@ -1,8 +1,10 @@
+import { Avatars } from 'src/features/avatars/entity/avatars.entity';
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   DeleteDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity()
@@ -27,4 +29,7 @@ export class User {
 
   @DeleteDateColumn()
   deletedAt: Date | null;
+
+  @OneToMany(() => Avatars, (avatar) => avatar.user)
+  avatars?: Avatars[];
 }

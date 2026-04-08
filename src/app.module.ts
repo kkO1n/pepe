@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
-import { UsersModule } from './features/users/users.module';
-import { AuthModule } from './auth/auth.module';
-import { AppController } from './app.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { validate } from './env.validation';
-import { JwtModule } from '@nestjs/jwt';
-import { LoggerModule } from 'nestjs-pino';
-import { randomUUID } from 'crypto';
 import { APP_FILTER } from '@nestjs/core';
+import { JwtModule } from '@nestjs/jwt';
+import { randomUUID } from 'crypto';
+import { LoggerModule } from 'nestjs-pino';
+import { AppController } from './app.controller';
+import { AuthModule } from './auth/auth.module';
 import { DBExceptionFilter } from './common/filters/db-exception.filter';
-import { S3Module } from './providers/files/s3/s3.module';
+import { validate } from './env.validation';
 import { AvatarsModule } from './features/avatars/avatars.module';
+import { UsersModule } from './features/users/users.module';
+import { S3Module } from './providers/files/s3/s3.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -28,6 +28,9 @@ import { AvatarsModule } from './features/avatars/avatars.module';
     }),
     LoggerModule.forRoot({
       pinoHttp: {
+        transport: {
+          target: 'pino-pretty',
+        },
         genReqId(req) {
           return req.headers['x-request-id'] || randomUUID();
         },

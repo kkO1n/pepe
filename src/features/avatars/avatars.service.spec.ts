@@ -1,9 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import {
-  FILE_SERVICE,
-  type IFileService,
-} from 'src/providers/files/files.adapter';
+import { IAvatarsRepository } from 'src/common/interfaces/avatars-repository.interface';
+import { FILE_SERVICE } from 'src/providers/files/files.adapter';
 import { AvatarsService } from './avatars.service';
 
 describe('AvatarsService', () => {
@@ -15,8 +13,9 @@ describe('AvatarsService', () => {
         AvatarsService,
         {
           provide: FILE_SERVICE,
-          useValue: {} as IFileService,
+          useValue: { uploadFile: jest.fn(), removeFile: jest.fn() },
         },
+        { provide: IAvatarsRepository, useValue: { create: jest.fn() } },
       ],
     }).compile();
 
