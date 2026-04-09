@@ -25,6 +25,10 @@ export class UsersService {
     private readonly userRepository: IUserRepository,
   ) {}
 
+  async resetAllBalances() {
+    return this.userRepository.resetBalances();
+  }
+
   async transfer(
     authId: number,
     recipientId: number,

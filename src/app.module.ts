@@ -1,4 +1,5 @@
 import KeyvRedis from '@keyv/redis';
+import { BullModule } from '@nestjs/bullmq';
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -12,10 +13,10 @@ import { AuthModule } from './auth/auth.module';
 import { DBExceptionFilter } from './common/filters/db-exception.filter';
 import { validate } from './env.validation';
 import { AvatarsModule } from './features/avatars/avatars.module';
+import { BalanceModule } from './features/balance/balance.module';
 import { UsersModule } from './features/users/users.module';
 import { RedisModule } from './providers/databases/redis/redis.module';
 import { S3Module } from './providers/files/s3/s3.module';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -58,11 +59,22 @@ import { S3Module } from './providers/files/s3/s3.module';
         };
       },
     }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        connection: {
+          host: config.getOrThrow('REDIS_HOST'),
+          port: Number(config.getOrThrow('REDIS_PORT')),
+          password: config.getOrThrow('REDIS_PASSWORD'),
+        },
+      }),
+    }),
     S3Module,
     UsersModule,
     AuthModule,
     AvatarsModule,
     RedisModule,
+    BalanceModule,
   ],
   providers: [
     {

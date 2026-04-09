@@ -6,6 +6,7 @@ class UserResponseDto {
   @Expose() email: string;
   @Expose() age: number;
   @Expose() description: string;
+  @Expose() balance: string;
 }
 
 class PaginatedUsersResponseDto {
@@ -16,4 +17,4 @@ class PaginatedUsersResponseDto {
   @Expose()
   total: number;
 }
-export { UserResponseDto, PaginatedUsersResponseDto };
+export { PaginatedUsersResponseDto, UserResponseDto };

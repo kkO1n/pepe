@@ -33,4 +33,5 @@ export abstract class IUserRepository {
     recipientId: number,
     amount: number,
   ): Promise<UpdateResult>;
+  abstract resetBalances(): Promise<void>;
 }

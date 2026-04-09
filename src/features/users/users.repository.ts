@@ -18,6 +18,15 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     return this.getRepository(Users, entityManager);
   }
 
+  async resetBalances(): Promise<void> {
+    await this.userRepository()
+      .createQueryBuilder()
+      .update(Users)
+      .set({ balance: () => '0' })
+      .where('"deletedAt" IS NULL')
+      .execute();
+  }
+
   async lockUsers(
     usersRepository: Repository<Users>,
     minId: number,
