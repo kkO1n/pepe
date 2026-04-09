@@ -1,80 +1,98 @@
 import {
   BadRequestException,
   ConflictException,
-  Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { DATA_SOURCE } from 'src/common/constants';
 import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
+import { ActiveUsersQueryDto } from 'src/features/users/dto/active-users-query-dto';
 import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
-import { DataSource } from 'typeorm';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
 import {
   PaginatedUsersResponseDto,
   UserResponseDto,
 } from './dto/user-response-dto';
-import { Users } from './entity/user.entity';
+import { Transactional } from 'typeorm-transactional';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @Inject(DATA_SOURCE) private readonly dataSource: DataSource,
-    private readonly userRepository: IUserRepository,
-  ) {}
+  private readonly logger = new Logger(UsersService.name);
+
+  constructor(private readonly userRepository: IUserRepository) {}
 
   async resetAllBalances() {
     return this.userRepository.resetBalances();
   }
 
+  @Transactional()
   async transfer(
     authId: number,
     recipientId: number,
     amount: string,
   ): Promise<void> {
+    const transferMeta = `senderId=${authId}, recipientId=${recipientId}, amount=${amount}`;
+    this.logger.log(`Transfer started | ${transferMeta}`);
+
     if (authId === recipientId) {
+      this.logger.warn(
+        `Transfer rejected: same sender/recipient | ${transferMeta}`,
+      );
       throw new BadRequestException('Cannot transfer to yourself');
     }
 
     const parsedAmount = Number(amount);
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      this.logger.warn(`Transfer rejected: invalid amount | ${transferMeta}`);
       throw new BadRequestException('Amount must be positive');
     }
+    this.logger.debug(`Transfer amount validated | ${transferMeta}`);
 
-    await this.dataSource.transaction(async (manager) => {
-      const repo = manager.getRepository(Users);
-
+    try {
       const [minId, maxId] =
         authId < recipientId ? [authId, recipientId] : [recipientId, authId];
 
-      const lockedUsers = await this.userRepository.lockUsers(
-        repo,
-        minId,
-        maxId,
-      );
+      const lockedUsers = await this.userRepository.lockUsers(minId, maxId);
 
       if (lockedUsers.length !== 2) {
+        this.logger.warn(
+          `Transfer rejected: users not found | ${transferMeta}`,
+        );
         throw new NotFoundException('Sender or recipient not found');
       }
 
-      const debit = await this.userRepository.debit(repo, authId, parsedAmount);
+      const debit = await this.userRepository.debit(authId, parsedAmount);
 
       if ((debit.affected ?? 0) !== 1) {
+        this.logger.warn(
+          `Transfer rejected: insufficient funds | ${transferMeta}`,
+        );
         throw new ConflictException('Insufficient funds');
       }
 
       const credit = await this.userRepository.credit(
-        repo,
         recipientId,
         parsedAmount,
       );
 
       if ((credit.affected ?? 0) !== 1) {
+        this.logger.warn(
+          `Transfer rejected: recipient disappeared during transaction | ${transferMeta}`,
+        );
         throw new NotFoundException('Recipient not found');
       }
-    });
+
+      this.logger.log(`Transfer completed | ${transferMeta}`);
+      this.logger.verbose(
+        `Transfer transaction committed | ${transferMeta}, lockedUsers=${lockedUsers.length}`,
+      );
+    } catch (error) {
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Transfer failed | ${transferMeta}`, stack);
+      throw error;
+    }
   }
 
   async listUsers(
@@ -89,8 +107,10 @@ export class UsersService {
     );
   }
 
-  async listActiveUsers(minAge: number, maxAge: number) {
-    return await this.userRepository.findManyByActivity(minAge, maxAge);
+  async listActiveUsers(params: ActiveUsersQueryDto) {
+    const [data, total] = await this.userRepository.findManyByActivity(params);
+
+    return { data, total };
   }
 
   async getUserById(userId: number) {

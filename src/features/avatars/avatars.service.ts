@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
 } from '@nestjs/common';
@@ -37,11 +38,15 @@ export class AvatarsService {
     });
   }
 
-  async deleteAvatar(avatarId: number) {
-    const path = await this.avatarsRepository.getPathByAvatarId(avatarId);
-    if (!path) throw new BadRequestException();
+  async deleteAvatar(avatarId: number, requesterId: number) {
+    const avatarMeta = await this.avatarsRepository.getAvatarMetaById(avatarId);
+    if (!avatarMeta) throw new BadRequestException();
 
-    await this.files.removeFile({ path });
+    if (avatarMeta.ownerId !== requesterId) {
+      throw new ForbiddenException('You can only delete your own avatar');
+    }
+
+    await this.files.removeFile({ path: avatarMeta.path });
 
     return await this.avatarsRepository.softDelete(avatarId);
   }

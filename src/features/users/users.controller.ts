@@ -1,4 +1,4 @@
-import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
 import {
   Body,
   Controller,
@@ -16,7 +16,9 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/common/decorators/current-user';
+import { ActiveUsersQueryDto } from './dto/active-users-query-dto';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
+import { UsersCacheInterceptor } from './interceptors/users-cache.interceptor';
 import { TransferDto } from './dto/transfer-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { UsersService } from './users.service';
@@ -29,7 +31,7 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get()
-  @UseInterceptors(CacheInterceptor)
+  @UseInterceptors(UsersCacheInterceptor)
   @CacheTTL(30)
   @CacheKey('users:list')
   getUsers(@Query() query: GetUsersQueryDto) {
@@ -39,7 +41,7 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Get('me')
-  @UseInterceptors(CacheInterceptor)
+  @UseInterceptors(UsersCacheInterceptor)
   @CacheTTL(30)
   @CacheKey('users:me')
   async getProfile(@CurrentUser('login') login: string) {
@@ -54,11 +56,8 @@ export class UsersController {
   }
 
   @Get('active')
-  getActiveUsers(
-    @Query('minAge', ParseIntPipe) minAge: number,
-    @Query('maxAge', ParseIntPipe) maxAge: number,
-  ) {
-    return this.usersService.listActiveUsers(minAge, maxAge);
+  getActiveUsers(@Query() query: ActiveUsersQueryDto) {
+    return this.usersService.listActiveUsers(query);
   }
 
   @Put(':id')

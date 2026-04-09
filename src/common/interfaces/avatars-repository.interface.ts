@@ -5,6 +5,8 @@ export abstract class IAvatarsRepository {
     avatar: Partial<Avatars>,
   ): Promise<{ path: string; avatarId: number }>;
   abstract softDelete(avatarId: number): Promise<void>;
-  abstract getPathByAvatarId(avatarId: number): Promise<string | null>;
+  abstract getAvatarMetaById(
+    avatarId: number,
+  ): Promise<{ path: string; ownerId: number } | null>;
   abstract getAvatarsByUserId(userId: number): Promise<[Avatars[], number]>;
 }

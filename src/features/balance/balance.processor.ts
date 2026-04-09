@@ -12,11 +12,25 @@ export class BalanceResetProcessor extends WorkerHost {
   }
 
   async process(job: Job) {
-    this.logger.log(`job ${job.id} is processing ${job.name}`);
-    this.logger.verbose(job);
-    if (job.name === 'reset-all-balances') {
-      await this.usersService.resetAllBalances();
+    this.logger.log(`Job started | id=${job.id} | name=${job.name}`);
+    this.logger.verbose(
+      `Job payload | id=${job.id} | name=${job.name} | data=${JSON.stringify(job.data)}`,
+    );
+
+    try {
+      if (job.name === 'reset-all-balances') {
+        await this.usersService.resetAllBalances();
+        this.logger.debug(`Balances reset completed | jobId=${job.id}`);
+      } else {
+        this.logger.warn(
+          `Unknown job skipped | id=${job.id} | name=${job.name}`,
+        );
+      }
+      this.logger.log(`Job completed | id=${job.id} | name=${job.name}`);
+    } catch (error) {
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Job failed | id=${job.id} | name=${job.name}`, stack);
+      throw error;
     }
-    this.logger.log(`job ${job.id} is processing ${job.name}`);
   }
 }

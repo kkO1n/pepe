@@ -29,14 +29,23 @@ export class AvatarsRepository
     await this.avatarsRepository().softDelete(avatarId);
   }
 
-  async getPathByAvatarId(avatarId: number): Promise<string | null> {
+  async getAvatarMetaById(
+    avatarId: number,
+  ): Promise<{ path: string; ownerId: number } | null> {
     const avatar = await this.avatarsRepository().findOne({
       where: { id: avatarId },
+      select: {
+        userId: true,
+        url: true,
+      },
     });
 
     if (!avatar) return null;
 
-    return avatar?.url;
+    return {
+      path: avatar.url,
+      ownerId: avatar.userId,
+    };
   }
 
   async getAvatarsByUserId(userId: number) {

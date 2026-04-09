@@ -1,37 +1,26 @@
-import type { CreateUserDto } from 'src/features/users/dto/create-user-dto';
-import type { GetUsersQueryDto } from 'src/features/users/dto/get-users-query-dto';
-import type { UpdateUserDto } from 'src/features/users/dto/update-user-dto';
+import type {
+  ActiveUserListItem,
+  ActiveUsersQueryParams,
+  CreateUserPayload,
+  ListUsersParams,
+  UpdateUserPayload,
+} from 'src/features/users/types/user-repository.types';
 import type { Users } from 'src/features/users/entity/user.entity';
-import type { Repository, UpdateResult } from 'typeorm';
+import type { UpdateResult } from 'typeorm';
 
 export abstract class IUserRepository {
   abstract findManyByActivity(
-    minAge: number,
-    maxAge: number,
-  ): Promise<[Users[], number]>;
-  abstract findManyByLogin(
-    params: GetUsersQueryDto,
-  ): Promise<[Users[], number]>;
+    params: ActiveUsersQueryParams,
+  ): Promise<[ActiveUserListItem[], number]>;
+  abstract findManyByLogin(params: ListUsersParams): Promise<[Users[], number]>;
   abstract findById(userId: number): Promise<Users | null>;
   abstract findByLogin(login: string): Promise<Users | null>;
-  abstract create(createUserDto: CreateUserDto): Promise<Users>;
-  abstract update(id: number, createUserDto: UpdateUserDto): Promise<Users>;
+  abstract create(createUserDto: CreateUserPayload): Promise<Users>;
+  abstract update(id: number, createUserDto: UpdateUserPayload): Promise<Users>;
   abstract softDeleteById(id: number): Promise<void>;
 
-  abstract lockUsers(
-    usersRepository: Repository<Users>,
-    minId: number,
-    maxId: number,
-  ): Promise<Users[]>;
-  abstract debit(
-    usersRepository: Repository<Users>,
-    authId: number,
-    amount: number,
-  ): Promise<UpdateResult>;
-  abstract credit(
-    usersRepository: Repository<Users>,
-    recipientId: number,
-    amount: number,
-  ): Promise<UpdateResult>;
+  abstract lockUsers(minId: number, maxId: number): Promise<Users[]>;
+  abstract debit(authId: number, amount: number): Promise<UpdateResult>;
+  abstract credit(recipientId: number, amount: number): Promise<UpdateResult>;
   abstract resetBalances(): Promise<void>;
 }
