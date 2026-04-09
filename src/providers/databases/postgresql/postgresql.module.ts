@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DATA_SOURCE } from 'src/common/constants';
 import { DataSource } from 'typeorm';
+import { addTransactionalDataSource } from 'typeorm-transactional';
 import { getDatabaseOptions } from './data-source-options';
 
 export const databaseProviders = [
@@ -8,6 +9,8 @@ export const databaseProviders = [
     provide: DATA_SOURCE,
     useFactory: async () => {
       const dataSource = new DataSource(getDatabaseOptions());
+
+      addTransactionalDataSource(dataSource);
 
       return dataSource.initialize();
     },

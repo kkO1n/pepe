@@ -18,6 +18,50 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     return this.getRepository(Users, entityManager);
   }
 
+  async lockUsers(
+    usersRepository: Repository<Users>,
+    minId: number,
+    maxId: number,
+  ) {
+    return await usersRepository
+      .createQueryBuilder('u')
+      .setLock('pessimistic_write')
+      .where('u.id IN (:...ids)', { ids: [minId, maxId] })
+      .andWhere('u.deletedAt IS NULL')
+      .getMany();
+  }
+
+  async debit(
+    usersRepository: Repository<Users>,
+    authId: number,
+    amount: number,
+  ) {
+    return await usersRepository
+      .createQueryBuilder()
+      .update(Users)
+      .set({ balance: () => `balance - :amount` })
+      .where('id = :authId', { authId })
+      .andWhere('deletedAt IS NULL')
+      .andWhere('balance >= :amount')
+      .setParameters({ amount: amount.toFixed(2) })
+      .execute();
+  }
+
+  async credit(
+    usersRepository: Repository<Users>,
+    recipientId: number,
+    amount: number,
+  ) {
+    return await usersRepository
+      .createQueryBuilder()
+      .update(Users)
+      .set({ balance: () => `balance + :amount` })
+      .where('id = :recipientId', { recipientId })
+      .andWhere('deletedAt IS NULL')
+      .setParameters({ amount: amount.toFixed(2) })
+      .execute();
+  }
+
   async findManyByActivity(minAge: number, maxAge: number) {
     return await this.userRepository()
       .createQueryBuilder('u')

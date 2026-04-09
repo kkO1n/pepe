@@ -7,6 +7,7 @@ import {
   HttpCode,
   Param,
   ParseIntPipe,
+  Post,
   Put,
   Query,
   UseGuards,
@@ -16,6 +17,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CurrentUser } from 'src/common/decorators/current-user';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
+import { TransferDto } from './dto/transfer-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { UsersService } from './users.service';
 
@@ -42,6 +44,13 @@ export class UsersController {
   @CacheKey('users:me')
   async getProfile(@CurrentUser('login') login: string) {
     return await this.usersService.getPublicUserByLogin(login);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('me/transfers')
+  async transfer(@CurrentUser('sub') authId: number, @Body() dto: TransferDto) {
+    return this.usersService.transfer(authId, dto.recipientId, dto.amount);
   }
 
   @Get('active')

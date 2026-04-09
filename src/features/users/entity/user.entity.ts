@@ -1,5 +1,6 @@
 import { Avatars } from 'src/features/avatars/entity/avatars.entity';
 import {
+  Check,
   Column,
   DeleteDateColumn,
   Entity,
@@ -25,6 +26,10 @@ export class Users {
 
   @Column('int')
   age: number;
+
+  @Check('balance >= 0')
+  @Column('numeric', { precision: 12, scale: 2, default: 0 })
+  balance: number;
 
   @Column({ length: 1000 })
   description: string;

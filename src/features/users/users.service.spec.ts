@@ -1,5 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { DATA_SOURCE } from 'src/common/constants';
 import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
 import type { CreateUserDto } from './dto/create-user-dto';
 import type { GetUsersQueryDto } from './dto/get-users-query-dto';
@@ -17,6 +18,7 @@ describe('UsersService', () => {
     email: 'john@example.com',
     password: 'hashed-password',
     age: 22,
+    balance: 0,
     description: 'desc',
     deletedAt: null,
   });
@@ -26,14 +28,25 @@ describe('UsersService', () => {
       providers: [
         UsersService,
         {
+          provide: DATA_SOURCE,
+          useValue: {
+            transaction: jest.fn(),
+          },
+        },
+        {
           provide: IUserRepository,
           useValue: {
+            transfer: jest.fn(),
+            findManyByActivity: jest.fn(),
             findManyByLogin: jest.fn(),
             findById: jest.fn(),
             findByLogin: jest.fn(),
             create: jest.fn(),
             update: jest.fn(),
             softDeleteById: jest.fn(),
+            lockUsers: jest.fn(),
+            debit: jest.fn(),
+            credit: jest.fn(),
           },
         },
       ],

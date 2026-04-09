@@ -1,17 +1,77 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
+import { DATA_SOURCE } from 'src/common/constants';
 import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
 import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
+import { DataSource } from 'typeorm';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
 import {
   PaginatedUsersResponseDto,
   UserResponseDto,
 } from './dto/user-response-dto';
+import { Users } from './entity/user.entity';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    @Inject(DATA_SOURCE) private readonly dataSource: DataSource,
+    private readonly userRepository: IUserRepository,
+  ) {}
+
+  async transfer(
+    authId: number,
+    recipientId: number,
+    amount: string,
+  ): Promise<void> {
+    if (authId === recipientId) {
+      throw new BadRequestException('Cannot transfer to yourself');
+    }
+
+    const parsedAmount = Number(amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      throw new BadRequestException('Amount must be positive');
+    }
+
+    await this.dataSource.transaction(async (manager) => {
+      const repo = manager.getRepository(Users);
+
+      const [minId, maxId] =
+        authId < recipientId ? [authId, recipientId] : [recipientId, authId];
+
+      const lockedUsers = await this.userRepository.lockUsers(
+        repo,
+        minId,
+        maxId,
+      );
+
+      if (lockedUsers.length !== 2) {
+        throw new NotFoundException('Sender or recipient not found');
+      }
+
+      const debit = await this.userRepository.debit(repo, authId, parsedAmount);
+
+      if ((debit.affected ?? 0) !== 1) {
+        throw new ConflictException('Insufficient funds');
+      }
+
+      const credit = await this.userRepository.credit(
+        repo,
+        recipientId,
+        parsedAmount,
+      );
+
+      if ((credit.affected ?? 0) !== 1) {
+        throw new NotFoundException('Recipient not found');
+      }
+    });
+  }
 
   async listUsers(
     params: GetUsersQueryDto,
