@@ -1,10 +1,10 @@
-import type { UserSessions } from 'src/auth/entity/user-session.entity';
+import type { UserSession } from 'src/auth/entity/user-session.entity';
 
 export abstract class IUserSessionRepository {
   abstract findValidByToken(
     refreshToken: string,
     now?: Date,
-  ): Promise<UserSessions | null>;
+  ): Promise<UserSession | null>;
 
   abstract upsertForUser(
     userId: number,

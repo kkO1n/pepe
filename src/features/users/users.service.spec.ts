@@ -5,14 +5,14 @@ import { IUserRepository } from 'src/common/interfaces/user-repository.interface
 import type { CreateUserDto } from './dto/create-user-dto';
 import type { GetUsersQueryDto } from './dto/get-users-query-dto';
 import type { UpdateUserDto } from './dto/update-user-dto';
-import type { Users } from './entity/user.entity';
+import type { User } from './entity/user.entity';
 import { UsersService } from './users.service';
 
 describe('UsersService', () => {
   let service: UsersService;
   let userRepository: jest.Mocked<IUserRepository>;
 
-  const buildUser = (): Users => ({
+  const buildUser = (): User => ({
     id: 1,
     login: 'john',
     email: 'john@example.com',

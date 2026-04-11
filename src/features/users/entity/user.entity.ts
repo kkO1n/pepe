@@ -1,4 +1,4 @@
-import { Avatars } from 'src/features/avatars/entity/avatars.entity';
+import { Avatar } from '../../avatars/entity/avatar.entity';
 import {
   Check,
   Column,
@@ -9,9 +9,9 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity('users')
-@Index('idx_users_login_age_id', ['login', 'age', 'id'])
-export class Users {
+@Entity('user')
+@Index('idx_user_login_age_id', ['login', 'age', 'id'])
+export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -37,6 +37,6 @@ export class Users {
   @DeleteDateColumn()
   deletedAt: Date | null;
 
-  @OneToMany(() => Avatars, (avatar) => avatar.user)
-  avatars?: Avatars[];
+  @OneToMany(() => Avatar, (avatar) => avatar.user)
+  avatars?: Avatar[];
 }

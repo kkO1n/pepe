@@ -72,6 +72,14 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   REDIS_PASSWORD: string = 'crazyassredispasswrod';
+
+  @IsString()
+  @IsNotEmpty()
+  S3_ACCESS_KEY_ID: string;
+
+  @IsString()
+  @IsNotEmpty()
+  S3_SECRET_ACCESS_KEY: string;
 }
 
 export function validate(config: Record<string, unknown>) {

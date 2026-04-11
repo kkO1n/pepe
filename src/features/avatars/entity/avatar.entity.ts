@@ -1,4 +1,4 @@
-import { Users } from 'src/features/users/entity/user.entity';
+import { User } from '../../users/entity/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -9,9 +9,9 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity('avatars')
-@Index('idx_avatars_user_id', ['userId'])
-export class Avatars {
+@Entity('avatar')
+@Index('idx_avatar_user_id', ['userId'])
+export class Avatar {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -30,6 +30,6 @@ export class Avatars {
   @DeleteDateColumn()
   deletedAt: Date | null;
 
-  @ManyToOne(() => Users, (user) => user.avatars, { onDelete: 'CASCADE' })
-  user: Users;
+  @ManyToOne(() => User, (user) => user.avatars, { onDelete: 'CASCADE' })
+  user: User;
 }

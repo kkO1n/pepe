@@ -9,13 +9,13 @@ import {
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
-import { Users } from '../../features/users/entity/user.entity';
+import { User } from '../../features/users/entity/user.entity';
 
-@Entity('user_sessions')
-@Unique('UQ_user_sessions_user_id', ['userId'])
-@Unique('UQ_user_sessions_refresh_token', ['refreshToken'])
-@Index('IDX_user_sessions_expires_at', ['expiresAt'])
-export class UserSessions {
+@Entity('user_session')
+@Unique('UQ_user_session_user_id', ['userId'])
+@Unique('UQ_user_session_refresh_token', ['refreshToken'])
+@Index('IDX_user_session_expires_at', ['expiresAt'])
+export class UserSession {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -34,7 +34,7 @@ export class UserSessions {
   @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 
-  @ManyToOne(() => Users, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
-  user: Users;
+  user: User;
 }

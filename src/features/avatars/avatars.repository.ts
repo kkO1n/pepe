@@ -3,7 +3,7 @@ import { DATA_SOURCE } from 'src/common/constants';
 import type { IAvatarsRepository } from 'src/common/interfaces/avatars-repository.interface';
 import type { DataSource, EntityManager, Repository } from 'typeorm';
 import { BaseRepository } from '../base.repository';
-import { Avatars } from './entity/avatars.entity';
+import { Avatar } from './entity/avatar.entity';
 
 export class AvatarsRepository
   extends BaseRepository
@@ -13,13 +13,11 @@ export class AvatarsRepository
     super(dataSource);
   }
 
-  private avatarsRepository(
-    entityManager?: EntityManager,
-  ): Repository<Avatars> {
-    return this.getRepository(Avatars, entityManager);
+  private avatarsRepository(entityManager?: EntityManager): Repository<Avatar> {
+    return this.getRepository(Avatar, entityManager);
   }
 
-  async create(dto: Partial<Avatars>) {
+  async create(dto: Partial<Avatar>) {
     const createdAvatar = await this.avatarsRepository().save(dto);
 
     return { path: createdAvatar.url, avatarId: createdAvatar.id };

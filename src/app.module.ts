@@ -17,6 +17,7 @@ import { BalanceModule } from './features/balance/balance.module';
 import { UsersModule } from './features/users/users.module';
 import { RedisModule } from './providers/databases/redis/redis.module';
 import { S3Module } from './providers/files/s3/s3.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({

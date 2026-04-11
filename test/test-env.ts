@@ -1,3 +1,5 @@
+import { initializeTransactionalContext } from 'typeorm-transactional';
+
 process.env.NODE_ENV = process.env.NODE_ENV ?? 'test';
 
 if (!process.env.JWT_SECRET) {
@@ -20,5 +22,6 @@ process.env.DB_HOST = process.env.DB_HOST ?? 'localhost';
 process.env.DB_PORT = process.env.DB_PORT ?? '5430';
 process.env.DB_USER = process.env.DB_USER ?? 'root';
 process.env.DB_PASSWORD = process.env.DB_PASSWORD ?? 'root';
-process.env.DB_NAME = process.env.DB_NAME ?? 'db_test';
-process.env.DB_SYNCHRONIZE = process.env.DB_SYNCHRONIZE ?? 'false';
+process.env.DB_NAME = 'db_test';
+process.env.DB_SYNCHRONIZE = 'false';
+initializeTransactionalContext();

@@ -8,3 +8,4 @@ export const REFRESH_COOKIE_OPTIONS: CookieOptions = {
   path: '/auth',
   maxAge: REFRESH_EXPIRES_AT,
 };
+export const MAX_AVATARS_COUNT = 5;

@@ -8,6 +8,7 @@ import {
 import { Request, Response } from 'express';
 import { Logger } from 'nestjs-pino';
 import { QueryFailedError } from 'typeorm';
+import { getPostgresErrorMapping } from '../errors/postgres-error.map';
 
 type PgDriverError = { code?: string };
 
@@ -36,28 +37,7 @@ export class DBExceptionFilter implements ExceptionFilter {
       'Database query failed',
     );
 
-    const mapped = {
-      '23505': {
-        status: HttpStatus.CONFLICT,
-        code: 'DB_UNIQUE_VIOLATION',
-        message: 'Resource already exists',
-      },
-      '23503': {
-        status: HttpStatus.CONFLICT,
-        code: 'DB_FOREIGN_KEY_VIOLATION',
-        message: 'Related resource does not exist',
-      },
-      '23502': {
-        status: HttpStatus.BAD_REQUEST,
-        code: 'DB_NOT_NULL_VIOLATION',
-        message: 'Required field is missing',
-      },
-      '22P02': {
-        status: HttpStatus.BAD_REQUEST,
-        code: 'DB_INVALID_INPUT',
-        message: 'Invalid input format',
-      },
-    }[pgCode ?? ''];
+    const mapped = getPostgresErrorMapping(pgCode);
 
     const status = mapped?.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
 

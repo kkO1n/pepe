@@ -10,7 +10,7 @@ import {
   ListUsersParams,
   UpdateUserPayload,
 } from './types/user-repository.types';
-import { Users } from './entity/user.entity';
+import { User } from './entity/user.entity';
 
 @Injectable()
 export class UserRepository extends BaseRepository implements IUserRepository {
@@ -18,14 +18,14 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     super(dataSource);
   }
 
-  private userRepository(entityManager?: EntityManager): Repository<Users> {
-    return this.getRepository(Users, entityManager);
+  private userRepository(entityManager?: EntityManager): Repository<User> {
+    return this.getRepository(User, entityManager);
   }
 
   async resetBalances(): Promise<void> {
     await this.userRepository()
       .createQueryBuilder()
-      .update(Users)
+      .update(User)
       .set({ balance: () => '0' })
       .where('"deletedAt" IS NULL')
       .execute();
@@ -43,7 +43,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
   async debit(authId: number, amount: number) {
     return await this.userRepository()
       .createQueryBuilder()
-      .update(Users)
+      .update(User)
       .set({ balance: () => `balance - :amount` })
       .where('id = :authId', { authId })
       .andWhere('deletedAt IS NULL')
@@ -55,7 +55,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
   async credit(recipientId: number, amount: number) {
     return await this.userRepository()
       .createQueryBuilder()
-      .update(Users)
+      .update(User)
       .set({ balance: () => `balance + :amount` })
       .where('id = :recipientId', { recipientId })
       .andWhere('deletedAt IS NULL')
@@ -75,7 +75,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
         `
         (
           SELECT COUNT(a.id)
-          FROM avatars a
+          FROM avatar a
           WHERE a."userId" = u.id
             AND a."deletedAt" IS NULL
         ) > 2
@@ -98,7 +98,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
         (subQuery) =>
           subQuery
             .select('a.url')
-            .from('avatars', 'a')
+            .from('avatar', 'a')
             .where('a."userId" = u.id')
             .andWhere('a."deletedAt" IS NULL')
             .orderBy('a."createdAt"', 'DESC')
@@ -116,7 +116,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     page,
     limit,
     login,
-  }: ListUsersParams): Promise<[Users[], number]> {
+  }: ListUsersParams): Promise<[User[], number]> {
     const currentPage = page ?? 1;
     const pageSize = limit ?? 10;
     const trimmedLogin = login?.trim();
@@ -129,23 +129,23 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     });
   }
 
-  async findById(userId: number): Promise<Users | null> {
+  async findById(userId: number): Promise<User | null> {
     return this.userRepository().findOne({
       where: { id: userId },
     });
   }
 
-  async findByLogin(login: string): Promise<Users | null> {
+  async findByLogin(login: string): Promise<User | null> {
     return this.userRepository().findOne({
       where: { login },
     });
   }
 
-  async create(createUserDto: CreateUserPayload): Promise<Users> {
+  async create(createUserDto: CreateUserPayload): Promise<User> {
     return this.userRepository().save(createUserDto);
   }
 
-  async update(id: number, putUserDto: UpdateUserPayload): Promise<Users> {
+  async update(id: number, putUserDto: UpdateUserPayload): Promise<User> {
     return this.userRepository().save({
       id,
       ...putUserDto,

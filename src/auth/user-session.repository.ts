@@ -9,7 +9,7 @@ import {
   MoreThan,
   Repository,
 } from 'typeorm';
-import { UserSessions } from './entity/user-session.entity';
+import { UserSession } from './entity/user-session.entity';
 
 @Injectable()
 export class UserSessionRepository
@@ -22,14 +22,14 @@ export class UserSessionRepository
 
   private sessionRepository(
     entityManager?: EntityManager,
-  ): Repository<UserSessions> {
-    return this.getRepository(UserSessions, entityManager);
+  ): Repository<UserSession> {
+    return this.getRepository(UserSession, entityManager);
   }
 
   async findValidByToken(
     refreshToken: string,
     now: Date = new Date(),
-  ): Promise<UserSessions | null> {
+  ): Promise<UserSession | null> {
     return this.sessionRepository().findOne({
       where: {
         refreshToken,

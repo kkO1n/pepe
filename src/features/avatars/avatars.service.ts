@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
+import { MAX_AVATARS_COUNT } from 'src/common/constants';
 import { IAvatarsRepository } from 'src/common/interfaces/avatars-repository.interface';
 import {
   FILE_SERVICE,
@@ -22,7 +23,10 @@ export class AvatarsService {
   async uploadAvatar(file: IUploadedMulterFile, login: string, userId: number) {
     const [, avatarsCount] =
       await this.avatarsRepository.getAvatarsByUserId(userId);
-    if (avatarsCount >= 5) throw new ConflictException();
+    if (avatarsCount >= MAX_AVATARS_COUNT)
+      throw new ConflictException(
+        `You can upload up to ${MAX_AVATARS_COUNT} avatars.`,
+      );
 
     const fileKey = crypto.randomUUID();
 
