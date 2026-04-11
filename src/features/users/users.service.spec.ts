@@ -1,9 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { DATA_SOURCE } from 'src/common/constants';
 import { IUserRepository } from 'src/common/interfaces/user-repository.interface';
-import { CreateUserDto } from './dto/create-user-dto';
-import { GetUsersQueryDto } from './dto/get-users-query-dto';
-import { UpdateUserDto } from './dto/update-user-dto';
-import { User } from './entity/user.entity';
+import type { CreateUserDto } from './dto/create-user-dto';
+import type { GetUsersQueryDto } from './dto/get-users-query-dto';
+import type { UpdateUserDto } from './dto/update-user-dto';
+import type { User } from './entity/user.entity';
 import { UsersService } from './users.service';
 
 describe('UsersService', () => {
@@ -16,6 +18,7 @@ describe('UsersService', () => {
     email: 'john@example.com',
     password: 'hashed-password',
     age: 22,
+    balance: 0,
     description: 'desc',
     deletedAt: null,
   });
@@ -25,14 +28,25 @@ describe('UsersService', () => {
       providers: [
         UsersService,
         {
+          provide: DATA_SOURCE,
+          useValue: {
+            transaction: jest.fn(),
+          },
+        },
+        {
           provide: IUserRepository,
           useValue: {
-            findMany: jest.fn(),
+            transfer: jest.fn(),
+            findManyByActivity: jest.fn(),
+            findManyByLogin: jest.fn(),
             findById: jest.fn(),
             findByLogin: jest.fn(),
             create: jest.fn(),
             update: jest.fn(),
             softDeleteById: jest.fn(),
+            lockUsers: jest.fn(),
+            debit: jest.fn(),
+            credit: jest.fn(),
           },
         },
       ],
@@ -43,7 +57,7 @@ describe('UsersService', () => {
   });
 
   it('listUsers returns paginated public users', async () => {
-    userRepository.findMany.mockResolvedValue([[buildUser()], 1]);
+    userRepository.findManyByLogin.mockResolvedValue([[buildUser()], 1]);
     const query: GetUsersQueryDto = { page: 1, limit: 10 };
 
     const result = await service.listUsers(query);

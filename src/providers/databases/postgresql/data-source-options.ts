@@ -1,6 +1,5 @@
-import { UserSession } from '../../../auth/entity/user-session.entity';
-import { User } from '../../../features/users/entity/user.entity';
-import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import { join } from 'path';
+import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
 function parsePort(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
@@ -21,8 +20,8 @@ export function getDatabaseOptions(
     username: process.env.DB_USER ?? 'root',
     password: process.env.DB_PASSWORD ?? 'root',
     database: process.env.DB_NAME ?? 'db',
-    entities: [User, UserSession],
-    synchronize: parseSynchronize(process.env.DB_SYNCHRONIZE ?? 'false'),
+    synchronize: parseSynchronize(process.env.DB_SYNCHRONIZE ?? 'true'),
+    entities: [join(__dirname, '../../../**/*.entity{.ts,.js}')],
     ...overrides,
   };
 }

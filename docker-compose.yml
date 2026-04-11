@@ -1,6 +1,25 @@
-version: '3.9'
-
 services:
+  redis:
+    image: redis:alpine3.16
+    container_name: redis-wsbe
+    env_file: .env
+    command: >
+      --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
+    ports:
+      - '${REDIS_PORT}:${REDIS_PORT}'
+    restart: unless-stopped
+  minio:
+    image: minio/minio
+    command: server --console-address ":9001" /data
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_storage:/data
+    environment:
+      MINIO_ROOT_USER: minioroot
+      MINIO_ROOT_PASSWORD: minioroot
+
   postgres:
     image: postgres:latest
     container_name: postgres_container
@@ -12,7 +31,7 @@ services:
     ports:
       - '5430:5432'
     volumes:
-      - ./pgdata:/var/lib/postgresql/data/pgdata
+      - pgdata:/var/lib/postgresql/data/pgdata
     deploy:
       resources:
         limits:
@@ -39,5 +58,6 @@ services:
     stdin_open: true
 
 volumes:
+  minio_storage:
   pgdata:
     driver: local

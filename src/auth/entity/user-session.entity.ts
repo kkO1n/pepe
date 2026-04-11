@@ -1,4 +1,3 @@
-import { User } from '../../features/users/entity/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -10,11 +9,12 @@ import {
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
+import { User } from '../../features/users/entity/user.entity';
 
-@Entity('user_sessions')
-@Unique('UQ_user_sessions_user_id', ['userId'])
-@Unique('UQ_user_sessions_refresh_token', ['refreshToken'])
-@Index('IDX_user_sessions_expires_at', ['expiresAt'])
+@Entity('user_session')
+@Unique('UQ_user_session_user_id', ['userId'])
+@Unique('UQ_user_session_refresh_token', ['refreshToken'])
+@Index('IDX_user_session_expires_at', ['expiresAt'])
 export class UserSession {
   @PrimaryGeneratedColumn()
   id: number;

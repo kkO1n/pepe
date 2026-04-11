@@ -1,11 +1,16 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { Logger } from 'nestjs-pino';
+import { initializeTransactionalContext } from 'typeorm-transactional';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
+  initializeTransactionalContext();
   const app = await NestFactory.create(AppModule);
+
+  app.useLogger(app.get(Logger));
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
@@ -26,6 +31,7 @@ async function bootstrap() {
     .addTag('pepe')
     .addBearerAuth()
     .build();
+
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 

@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsString,
   Max,
   Min,
@@ -61,6 +62,24 @@ export class EnvironmentVariables {
   )
   @IsBoolean()
   DB_SYNCHRONIZE: boolean = false;
+
+  @IsNumber()
+  @IsNotEmpty()
+  REDIS_PORT: number = 6379;
+  @IsString()
+  @IsNotEmpty()
+  REDIS_HOST: string = 'localhost';
+  @IsString()
+  @IsNotEmpty()
+  REDIS_PASSWORD: string = 'crazyassredispasswrod';
+
+  @IsString()
+  @IsNotEmpty()
+  S3_ACCESS_KEY_ID: string;
+
+  @IsString()
+  @IsNotEmpty()
+  S3_SECRET_ACCESS_KEY: string;
 }
 
 export function validate(config: Record<string, unknown>) {

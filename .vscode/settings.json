@@ -1,0 +1,15 @@
+{
+  "eslint.useFlatConfig": true,
+  "eslint.validate": [
+    "typescript",
+    "typescriptreact",
+    "javascript",
+    "javascriptreact"
+  ],
+  "eslint.codeActionsOnSave.mode": "all",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "postman.settings.dotenv-detection-notification-visibility": false
+}

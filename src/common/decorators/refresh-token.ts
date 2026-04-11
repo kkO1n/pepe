@@ -1,9 +1,6 @@
-import {
-  createParamDecorator,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { Response, Request } from 'express';
+import type { ExecutionContext } from '@nestjs/common';
+import { createParamDecorator, UnauthorizedException } from '@nestjs/common';
+import type { Response, Request } from 'express';
 
 export const CurrentRefreshToken = createParamDecorator(
   (_: unknown, ctx: ExecutionContext): string => {

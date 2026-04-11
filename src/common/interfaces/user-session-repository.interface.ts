@@ -1,4 +1,4 @@
-import { UserSession } from 'src/auth/entity/user-session.entity';
+import type { UserSession } from 'src/auth/entity/user-session.entity';
 
 export abstract class IUserSessionRepository {
   abstract findValidByToken(

@@ -1,9 +1,16 @@
-import './test-env';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import type { INestApplication } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
+import type Redis from 'ioredis';
+import { PARAMS_PROVIDER_TOKEN } from 'nestjs-pino';
+import { DATA_SOURCE } from 'src/common/constants';
+import { REDIS } from 'src/providers/databases/redis/redis.module';
 import request from 'supertest';
+import type { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
+import './test-env';
 import {
   cleanupDatabase,
   ensureTestDatabase,
@@ -102,7 +109,15 @@ describe('App (e2e)', () => {
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PARAMS_PROVIDER_TOKEN)
+      .useValue({
+        pinoHttp: {
+          level: 'silent',
+          autoLogging: false,
+        },
+      })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.use(cookieParser());
@@ -125,9 +140,14 @@ describe('App (e2e)', () => {
   });
 
   afterAll(async () => {
-    if (app) {
-      await app.close();
-    }
+    if (!app) return;
+
+    const dataSource = app.get<DataSource>(DATA_SOURCE);
+    const redis = app.get<Redis>(REDIS);
+
+    await dataSource.destroy();
+    redis.disconnect();
+    await app.close();
   });
 
   it('POST /auth/register should create user and set refresh cookie', async () => {
@@ -289,7 +309,7 @@ describe('App (e2e)', () => {
   it('PUT /users/:id should update user with partial payload', async () => {
     const accessToken = await registerAndGetAccessToken();
     const profileResponse = await api()
-      .get('/profile/my')
+      .get('/users/me')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
@@ -305,7 +325,7 @@ describe('App (e2e)', () => {
   it('DELETE /users/:id should return 204', async () => {
     const accessToken = await registerAndGetAccessToken();
     const profileResponse = await api()
-      .get('/profile/my')
+      .get('/users/me')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
