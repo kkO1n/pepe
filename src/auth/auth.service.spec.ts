@@ -32,6 +32,7 @@ describe('AuthService', () => {
     age: 22,
     description: 'desc',
     deletedAt: null,
+    balance: 500,
   });
 
   beforeEach(async () => {
@@ -49,10 +50,9 @@ describe('AuthService', () => {
         {
           provide: IUserSessionRepository,
           useValue: {
-            findValidByToken: jest.fn(),
-            upsertForUser: jest.fn(),
-            deleteByToken: jest.fn(),
-            deleteExpired: jest.fn(),
+            create: jest.fn(),
+            findUserByRefreshTokenHash: jest.fn(),
+            revokeByRefreshTokenHash: jest.fn(),
           },
         },
         {
@@ -77,9 +77,8 @@ describe('AuthService', () => {
     jwtService = module.get(JwtService);
     configService = module.get(ConfigService);
 
-    userSessionRepository.deleteExpired.mockResolvedValue(undefined);
-    userSessionRepository.upsertForUser.mockResolvedValue(undefined);
-    userSessionRepository.deleteByToken.mockResolvedValue(undefined);
+    userSessionRepository.create.mockResolvedValue(undefined);
+    userSessionRepository.revokeByRefreshTokenHash.mockResolvedValue(undefined);
     jwtService.signAsync.mockResolvedValue('access-token');
 
     const configMap: Record<string, string> = {
@@ -104,7 +103,7 @@ describe('AuthService', () => {
     expect(typeof result.refresh_token).toBe('string');
     expect(result.refresh_token.length).toBeGreaterThan(0);
     const [userId, tokenHash, expiresAt] =
-      userSessionRepository.upsertForUser.mock.calls[0] ?? [];
+      userSessionRepository.create.mock.calls[0] ?? [];
 
     expect(userId).toBe(1);
     expect(tokenHash).toBe(hashToken(result.refresh_token));
@@ -157,14 +156,8 @@ describe('AuthService', () => {
     const refreshToken = 'old-refresh-token';
 
     usersService.getUserById.mockResolvedValue(buildUser());
-    userSessionRepository.findValidByToken.mockResolvedValue({
-      id: 1,
+    userSessionRepository.findUserByRefreshTokenHash.mockResolvedValue({
       userId: 1,
-      refreshToken: hashToken(refreshToken),
-      expiresAt: new Date(Date.now() + 60_000),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      user: buildUser(),
     });
 
     const result = await service.refresh(refreshToken);
@@ -172,15 +165,14 @@ describe('AuthService', () => {
     expect(result.access_token).toBe('access-token');
     expect(typeof result.refresh_token).toBe('string');
     expect(result.refresh_token.length).toBeGreaterThan(0);
-    const [lookupTokenHash, lookupNow] =
-      userSessionRepository.findValidByToken.mock.calls[0] ?? [];
+    const [lookupTokenHash] =
+      userSessionRepository.findUserByRefreshTokenHash.mock.calls[0] ?? [];
 
     expect(lookupTokenHash).toBe(hashToken(refreshToken));
-    expect(lookupNow).toBeInstanceOf(Date);
   });
 
   it('refresh throws UnauthorizedException for unknown refresh token', async () => {
-    userSessionRepository.findValidByToken.mockResolvedValue(null);
+    userSessionRepository.findUserByRefreshTokenHash.mockResolvedValue(null);
 
     await expect(service.refresh('missing-token')).rejects.toBeInstanceOf(
       UnauthorizedException,
@@ -192,7 +184,7 @@ describe('AuthService', () => {
 
     await expect(service.logout(refreshToken)).resolves.toBeUndefined();
     const [deletedTokenHash] =
-      userSessionRepository.deleteByToken.mock.calls[0] ?? [];
+      userSessionRepository.revokeByRefreshTokenHash.mock.calls[0] ?? [];
 
     expect(deletedTokenHash).toBe(hashToken(refreshToken));
   });

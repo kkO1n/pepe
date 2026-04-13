@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { UsersModule } from 'src/features/users/users.module';
+import { RedisModule } from 'src/providers/databases/redis/redis.module';
 import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 import { userSessionRepositoryProvider } from './user-session.repository-provider';
-import { DatabaseModule } from 'src/providers/databases/postgresql/postgresql.module';
 
 @Module({
-  imports: [DatabaseModule, UsersModule],
+  imports: [RedisModule, UsersModule],
   providers: [AuthService, userSessionRepositoryProvider],
   controllers: [AuthController],
   exports: [AuthService],

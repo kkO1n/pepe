@@ -1,16 +1,16 @@
 import {
+  ConflictException,
   Injectable,
   UnauthorizedException,
-  ConflictException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { hash, compare } from 'bcryptjs';
+import { compare, hash } from 'bcryptjs';
+import * as crypto from 'crypto';
 import { REFRESH_EXPIRES_AT } from 'src/common/constants';
 import { IUserSessionRepository } from 'src/common/interfaces/user-session-repository.interface';
 import { CreateUserDto } from 'src/features/users/dto/create-user-dto';
 import { UsersService } from 'src/features/users/users.service';
-import * as crypto from 'crypto';
 
 export type JwtPayload = {
   sub: number;
@@ -27,7 +27,6 @@ export class AuthService {
   ) {}
 
   async signIn(login: string, pass: string) {
-    await this.userSessionRepository.deleteExpired();
     const user = await this.usersService.getAuthUserByLogin(login);
 
     if (!user || !(await compare(pass, user.password))) {
@@ -57,21 +56,21 @@ export class AuthService {
   }
 
   async refresh(refresh_token: string) {
-    const now = new Date();
     const hashedRefreshToken = this.hashRefreshToken(refresh_token);
 
-    await this.userSessionRepository.deleteExpired(now);
-    const session = await this.userSessionRepository.findValidByToken(
-      hashedRefreshToken,
-      now,
-    );
+    const session =
+      await this.userSessionRepository.findUserByRefreshTokenHash(
+        hashedRefreshToken,
+      );
 
     if (!session) throw new UnauthorizedException();
 
     const user = await this.usersService.getUserById(session.userId);
 
     if (!user) {
-      await this.userSessionRepository.deleteByToken(hashedRefreshToken);
+      await this.userSessionRepository.revokeByRefreshTokenHash(
+        hashedRefreshToken,
+      );
       throw new UnauthorizedException();
     }
 
@@ -81,8 +80,9 @@ export class AuthService {
   async logout(refresh_token: string): Promise<void> {
     const hashedRefreshToken = this.hashRefreshToken(refresh_token);
 
-    await this.userSessionRepository.deleteExpired();
-    await this.userSessionRepository.deleteByToken(hashedRefreshToken);
+    await this.userSessionRepository.revokeByRefreshTokenHash(
+      hashedRefreshToken,
+    );
   }
 
   private async issueTokens(user: { id: number; login: string }) {
@@ -94,7 +94,7 @@ export class AuthService {
     const refresh_token = crypto.randomBytes(32).toString('hex');
     const hashedRefreshToken = this.hashRefreshToken(refresh_token);
 
-    await this.userSessionRepository.upsertForUser(
+    await this.userSessionRepository.create(
       user.id,
       hashedRefreshToken,
       new Date(Date.now() + REFRESH_EXPIRES_AT),

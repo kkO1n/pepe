@@ -54,7 +54,8 @@ import { S3Module } from './providers/files/s3/s3.module';
               store: new CacheableMemory({ ttl: 60000, lruSize: 5000 }),
             }),
             new KeyvRedis(
-              `redis://${configService.getOrThrow('REDIS_HOST')}:${configService.getOrThrow('REDIS_PORT')}`,
+              `redis://:${encodeURIComponent(configService.getOrThrow('REDIS_PASSWORD'))}` +
+                `@${configService.getOrThrow('REDIS_HOST')}:${configService.getOrThrow('REDIS_PORT')}`,
             ),
           ],
         };

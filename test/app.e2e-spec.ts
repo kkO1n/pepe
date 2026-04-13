@@ -197,7 +197,7 @@ describe('App (e2e)', () => {
       .expect(401);
   });
 
-  it('POST /auth/refresh should rotate refresh cookie and return new access token', async () => {
+  it('POST /auth/refresh should issue new refresh cookie and keep previous token valid', async () => {
     const agent = apiAgent();
     const payload = buildRegisterPayload();
 
@@ -224,10 +224,15 @@ describe('App (e2e)', () => {
     await api()
       .post('/auth/refresh')
       .set('Cookie', oldRefreshCookie ?? '')
-      .expect(401);
+      .expect(201);
+
+    await api()
+      .post('/auth/refresh')
+      .set('Cookie', newRefreshCookie ?? '')
+      .expect(201);
   });
 
-  it('POST /auth/login should invalidate previous session for the same user', async () => {
+  it('POST /auth/login should keep previous refresh session valid', async () => {
     const payload = buildRegisterPayload();
     const registerResponse = await api()
       .post('/auth/register')
@@ -254,7 +259,12 @@ describe('App (e2e)', () => {
     await api()
       .post('/auth/refresh')
       .set('Cookie', firstRefreshCookie ?? '')
-      .expect(401);
+      .expect(201);
+
+    await api()
+      .post('/auth/refresh')
+      .set('Cookie', secondRefreshCookie ?? '')
+      .expect(201);
   });
 
   it('POST /auth/logout should clear session and invalidate refresh token', async () => {

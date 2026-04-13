@@ -1,65 +1,46 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DATA_SOURCE } from 'src/common/constants';
-import { IUserSessionRepository } from 'src/common/interfaces/user-session-repository.interface';
-import { BaseRepository } from 'src/features/base.repository';
+import type Redis from 'ioredis';
 import {
-  DataSource,
-  EntityManager,
-  LessThanOrEqual,
-  MoreThan,
-  Repository,
-} from 'typeorm';
-import { UserSession } from './entity/user-session.entity';
+  IUserSessionRepository,
+  SessionLookupResult,
+} from 'src/common/interfaces/user-session-repository.interface';
+import { REDIS } from 'src/providers/databases/redis/redis.module';
+import { AUTH_SESSION_TOKEN_KEY_PREFIX } from './auth.constants';
 
 @Injectable()
-export class UserSessionRepository
-  extends BaseRepository
-  implements IUserSessionRepository
-{
-  constructor(@Inject(DATA_SOURCE) dataSource: DataSource) {
-    super(dataSource);
+export class UserSessionRepository implements IUserSessionRepository {
+  constructor(@Inject(REDIS) private readonly redis: Redis) {}
+
+  private tokenKey(refreshTokenHash: string): string {
+    return `${AUTH_SESSION_TOKEN_KEY_PREFIX}${refreshTokenHash}`;
   }
 
-  private sessionRepository(
-    entityManager?: EntityManager,
-  ): Repository<UserSession> {
-    return this.getRepository(UserSession, entityManager);
-  }
-
-  async findValidByToken(
-    refreshToken: string,
-    now: Date = new Date(),
-  ): Promise<UserSession | null> {
-    return this.sessionRepository().findOne({
-      where: {
-        refreshToken,
-        expiresAt: MoreThan(now),
-      },
-    });
-  }
-
-  async upsertForUser(
+  async create(
     userId: number,
-    refreshToken: string,
+    refreshTokenHash: string,
     expiresAt: Date,
   ): Promise<void> {
-    await this.sessionRepository().upsert(
-      {
-        userId,
-        refreshToken,
-        expiresAt,
-      },
-      ['userId'],
+    const ttlSeconds = Math.ceil((expiresAt.getTime() - Date.now()) / 1000);
+    if (ttlSeconds <= 0) return;
+
+    await this.redis.set(
+      this.tokenKey(refreshTokenHash),
+      String(userId),
+      'EX',
+      ttlSeconds,
     );
   }
 
-  async deleteByToken(refreshToken: string): Promise<void> {
-    await this.sessionRepository().delete({ refreshToken });
+  async findUserByRefreshTokenHash(
+    refreshTokenHash: string,
+  ): Promise<SessionLookupResult | null> {
+    const rawUserId = await this.redis.get(this.tokenKey(refreshTokenHash));
+    if (!rawUserId) return null;
+
+    return { userId: Number(rawUserId) };
   }
 
-  async deleteExpired(now: Date = new Date()): Promise<void> {
-    await this.sessionRepository().delete({
-      expiresAt: LessThanOrEqual(now),
-    });
+  async revokeByRefreshTokenHash(refreshTokenHash: string): Promise<void> {
+    await this.redis.del(this.tokenKey(refreshTokenHash));
   }
 }

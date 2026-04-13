@@ -1,18 +1,17 @@
-import type { UserSession } from 'src/auth/entity/user-session.entity';
-
 export abstract class IUserSessionRepository {
-  abstract findValidByToken(
-    refreshToken: string,
-    now?: Date,
-  ): Promise<UserSession | null>;
-
-  abstract upsertForUser(
+  abstract create(
     userId: number,
-    refreshToken: string,
+    refreshTokenHash: string,
     expiresAt: Date,
   ): Promise<void>;
 
-  abstract deleteByToken(refreshToken: string): Promise<void>;
+  abstract findUserByRefreshTokenHash(
+    refreshTokenHash: string,
+  ): Promise<SessionLookupResult | null>;
 
-  abstract deleteExpired(now?: Date): Promise<void>;
+  abstract revokeByRefreshTokenHash(refreshTokenHash: string): Promise<void>;
 }
+
+export type SessionLookupResult = {
+  userId: number;
+};

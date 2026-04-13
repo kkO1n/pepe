@@ -47,9 +47,7 @@ export async function cleanupDatabase(): Promise<void> {
   });
 
   await dataSource.initialize();
-  await dataSource.query(
-    'TRUNCATE TABLE "user_session", "user" RESTART IDENTITY CASCADE',
-  );
+  await dataSource.query('TRUNCATE TABLE "user" RESTART IDENTITY CASCADE');
   await dataSource.destroy();
 }
 
