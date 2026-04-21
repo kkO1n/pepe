@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { NotificationGateway } from './features/notification/gateway/notification.gateway';
 import { NotificationServiceController } from './notification-service.controller';
-import { NotificationServiceService } from './notification-service.service';
 
 describe('NotificationServiceController', () => {
   let notificationServiceController: NotificationServiceController;
@@ -9,7 +9,14 @@ describe('NotificationServiceController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [NotificationServiceController],
-      providers: [NotificationServiceService],
+      providers: [
+        {
+          provide: NotificationGateway,
+          useValue: {
+            sendNotification: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     notificationServiceController = app.get<NotificationServiceController>(
@@ -17,9 +24,7 @@ describe('NotificationServiceController', () => {
     );
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(notificationServiceController.getHello()).toBe('Hello World!');
-    });
+  it('should be defined', () => {
+    expect(notificationServiceController).toBeDefined();
   });
 });
