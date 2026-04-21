@@ -21,8 +21,11 @@
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true,
-
     "strictPropertyInitialization": false,
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "paths": {
+      "@pepe/*": ["apps/pepe/src/*"],
+      "@notification-service/*": ["apps/notification-service/src/*"]
+    }
   }
 }
