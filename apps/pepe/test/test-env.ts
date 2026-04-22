@@ -36,4 +36,8 @@ process.env.S3_SECRET_ACCESS_KEY =
 process.env.S3_ENDPOINT = process.env.S3_ENDPOINT ?? 'http://127.0.0.1:9000';
 process.env.S3_REGION = process.env.S3_REGION ?? 'us-east-1';
 process.env.S3_BUCKET_NAME = process.env.S3_BUCKET_NAME ?? 'dabucket';
+process.env.KAFKA_CLIENT_ID = process.env.KAFKA_CLIENT_ID ?? 'notification';
+process.env.KAFKA_BROKERS = process.env.KAFKA_BROKERS ?? 'localhost:9092';
+process.env.KAFKA_CONSUMER_GROUP_ID =
+  process.env.KAFKA_CONSUMER_GROUP_ID ?? 'notification-consumer';
 initializeTransactionalContext();

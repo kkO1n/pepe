@@ -97,6 +97,22 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   S3_PUBLIC_BASE_URL?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  NOTIFICATION_SERVICE_ORIGIN: string = 'http://127.0.0.1:3002';
+
+  @IsString()
+  @IsNotEmpty()
+  KAFKA_CLIENT_ID: string = 'notification';
+
+  @IsString()
+  @IsNotEmpty()
+  KAFKA_BROKERS: string = 'localhost:9092';
+
+  @IsString()
+  @IsNotEmpty()
+  KAFKA_CONSUMER_GROUP_ID: string = 'notification-consumer';
 }
 
 export function validate(config: Record<string, unknown>) {

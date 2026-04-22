@@ -10,6 +10,15 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
+export type NotificationPayload = {
+  type: 'transfer_completed' | 'message';
+  message: string;
+  amount?: number;
+  senderId?: number;
+  recipientId?: number;
+  transferredAt?: string;
+};
+
 @WebSocketGateway()
 export class NotificationGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -24,14 +33,21 @@ export class NotificationGateway
     this.logger.log('Initialized');
   }
 
-  sendNotification(userId: string, data = 'hello!') {
+  sendNotification(userId: string, payload: NotificationPayload) {
     const room = this.getUserRoom(userId);
-    this.io.to(room).emit('notification', { data });
+    this.io.to(room).emit('notification', payload);
     this.logger.debug(`Notification sent to room: ${room}`);
   }
 
   async handleConnection(client: Socket) {
-    const authorization = client.handshake.headers.authorization;
+    const authToken =
+      typeof client.handshake.auth?.token === 'string'
+        ? client.handshake.auth.token
+        : undefined;
+    const authorization =
+      authToken && authToken.length > 0
+        ? `Bearer ${authToken}`
+        : client.handshake.headers.authorization;
     const [type, token] = authorization?.split(' ') ?? [];
 
     if (type !== 'Bearer' || !token) {
@@ -45,7 +61,6 @@ export class NotificationGateway
     try {
       const payload = await this.jwtService.verifyAsync<{ sub: number }>(token);
       const room = this.getUserRoom(String(payload.sub));
-      console.log(payload);
       await client.join(room);
       this.logger.log(
         `Client id: ${client.id} connected and joined room: ${room}`,
@@ -62,7 +77,7 @@ export class NotificationGateway
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`Cliend id:${client.id} disconnected`);
+    this.logger.log(`Client id:${client.id} disconnected`);
   }
 
   @SubscribeMessage('ping')

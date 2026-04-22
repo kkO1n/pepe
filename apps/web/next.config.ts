@@ -14,13 +14,16 @@ const nextConfig: NextConfig = {
       '/users/:path*',
       '/avatars/:path*',
       '/balances/:path*',
+      '/notifications/:path*',
       '/api/:path*',
     ];
 
-    return proxyRoutes.map((source) => ({
-      source,
-      destination: `${backendOrigin}${source}`,
-    }));
+    return Promise.resolve(
+      proxyRoutes.map((source) => ({
+        source,
+        destination: `${backendOrigin}${source}`,
+      })),
+    );
   },
 };
 

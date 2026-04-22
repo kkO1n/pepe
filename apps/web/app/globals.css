@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --background: 35 29% 96%;
-  --foreground: 182 62% 13%;
-  --card: 0 0% 100%;
-  --card-foreground: 182 62% 13%;
-  --border: 35 26% 84%;
-  --input: 35 26% 84%;
-  --primary: 172 71% 28%;
-  --primary-foreground: 35 100% 98%;
-  --secondary: 40 78% 86%;
-  --secondary-foreground: 173 63% 19%;
-  --muted: 40 62% 92%;
-  --muted-foreground: 183 22% 36%;
-  --accent: 16 90% 63%;
-  --accent-foreground: 35 100% 98%;
-  --destructive: 0 70% 50%;
+  --background: 210 30% 8%;
+  --foreground: 180 20% 92%;
+  --card: 210 26% 12%;
+  --card-foreground: 180 20% 92%;
+  --border: 210 18% 24%;
+  --input: 210 18% 24%;
+  --primary: 173 68% 40%;
+  --primary-foreground: 210 30% 8%;
+  --secondary: 210 20% 18%;
+  --secondary-foreground: 180 20% 92%;
+  --muted: 210 20% 15%;
+  --muted-foreground: 180 12% 68%;
+  --accent: 23 88% 59%;
+  --accent-foreground: 210 30% 8%;
+  --destructive: 0 75% 56%;
   --destructive-foreground: 0 0% 98%;
   --radius: 0.9rem;
 }
@@ -30,10 +30,7 @@ body {
   @apply bg-background text-foreground;
   font-family:
     'Avenir Next', 'Trebuchet MS', 'Segoe UI', 'Noto Sans', sans-serif;
-  background-image:
-    radial-gradient(circle at 15% 15%, hsl(41 91% 81% / 0.45), transparent 38%),
-    radial-gradient(circle at 86% 10%, hsl(172 69% 44% / 0.2), transparent 44%),
-    linear-gradient(165deg, hsl(35 35% 97%), hsl(37 58% 94%));
+  background-image: none;
   min-height: 100vh;
 }
 

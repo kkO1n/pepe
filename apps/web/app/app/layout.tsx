@@ -2,8 +2,9 @@
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { AppShell } from '@/components/layout/app-shell';
 import { useAuth } from '@/components/auth/auth-provider';
+import { AppShell } from '@/components/layout/app-shell';
+import { NotificationToasts } from '@/components/notifications/notification-toasts';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,5 +33,10 @@ export default function ProtectedLayout({
 
   if (!user) return null;
 
-  return <AppShell>{children}</AppShell>;
+  return (
+    <>
+      <AppShell>{children}</AppShell>
+      <NotificationToasts />
+    </>
+  );
 }

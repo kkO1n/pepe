@@ -64,6 +64,18 @@ async function parseError(response: Response): Promise<ApiError> {
   });
 }
 
+async function parseJsonOrUndefined<T>(
+  response: Response,
+): Promise<T | undefined> {
+  const text = await response.text();
+
+  if (!text.trim()) {
+    return undefined;
+  }
+
+  return JSON.parse(text) as T;
+}
+
 export async function refreshAccessToken(): Promise<string | null> {
   if (refreshInFlight) return refreshInFlight;
 
@@ -81,7 +93,9 @@ export async function refreshAccessToken(): Promise<string | null> {
       return null;
     }
 
-    const body = (await response.json()) as { access_token?: string };
+    const body = (await parseJsonOrUndefined<{ access_token?: string }>(
+      response,
+    )) ?? { access_token: undefined };
     const token = body.access_token ?? null;
     setAccessToken(token);
     return token;
@@ -155,5 +169,5 @@ export async function apiFetch<T>(
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  return (await parseJsonOrUndefined<T>(response)) as T;
 }
