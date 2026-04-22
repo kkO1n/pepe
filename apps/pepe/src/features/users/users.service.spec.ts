@@ -11,6 +11,7 @@ import { UsersService } from './users.service';
 describe('UsersService', () => {
   let service: UsersService;
   let userRepository: jest.Mocked<IUserRepository>;
+  let notificationClient: { emit: jest.Mock };
 
   const buildUser = (): User => ({
     id: 1,
@@ -24,9 +25,17 @@ describe('UsersService', () => {
   });
 
   beforeEach(async () => {
+    notificationClient = {
+      emit: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
+        {
+          provide: 'NOTIFICATION_SERVICE',
+          useValue: notificationClient,
+        },
         {
           provide: DATA_SOURCE,
           useValue: {

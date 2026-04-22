@@ -1,12 +1,25 @@
 import { NestFactory } from '@nestjs/core';
+import type { MicroserviceOptions } from '@nestjs/microservices';
+import { Transport } from '@nestjs/microservices';
 import { NotificationServiceModule } from './notification-service.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(NotificationServiceModule);
 
-  const port = process.env.PORT ?? 3001;
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.KAFKA,
+    options: {
+      client: {
+        clientId: 'notification',
+        brokers: ['localhost:9092'],
+      },
+      consumer: {
+        groupId: 'notification-consumer',
+      },
+    },
+  });
 
-  await app.listen(Number(port), '0.0.0.0');
-  console.log(`socket.io listens on ${port} port`);
+  await app.startAllMicroservices();
+  await app.listen(Number(process.env.PORT ?? 3001), '0.0.0.0');
 }
 void bootstrap();

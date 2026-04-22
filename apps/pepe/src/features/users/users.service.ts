@@ -1,27 +1,33 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
+import { ClientKafka } from '@nestjs/microservices';
 import { IUserRepository } from '@pepe/common/interfaces/user-repository.interface';
 import { ActiveUsersQueryDto } from '@pepe/features/users/dto/active-users-query-dto';
 import { CreateUserDto } from '@pepe/features/users/dto/create-user-dto';
+import { plainToInstance } from 'class-transformer';
+import { Transactional } from 'typeorm-transactional';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
 import {
   PaginatedUsersResponseDto,
   UserResponseDto,
 } from './dto/user-response-dto';
-import { Transactional } from 'typeorm-transactional';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    @Inject('NOTIFICATION_SERVICE')
+    private readonly notificationClient: ClientKafka,
+    private readonly userRepository: IUserRepository,
+  ) {}
 
   async resetAllBalances() {
     return this.userRepository.resetBalances();
@@ -83,6 +89,12 @@ export class UsersService {
         );
         throw new NotFoundException('Recipient not found');
       }
+
+      this.notificationClient.emit('transfer_completed', {
+        authId,
+        recipientId,
+        amount: parsedAmount,
+      });
 
       this.logger.log(`Transfer completed | ${transferMeta}`);
       this.logger.verbose(
