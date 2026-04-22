@@ -5,7 +5,7 @@ Next.js frontend for the Pepe backend.
 ## Local development
 
 1. Start backend on port `3001`.
-2. Start notification-service on port `3002`.
+2. Start notifications-gateway on port `3002`.
 3. In this directory install deps and run dev server:
 
 ```bash
