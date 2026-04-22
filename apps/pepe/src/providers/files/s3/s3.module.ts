@@ -13,8 +13,9 @@ import { S3Service } from './s3.service';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         return new AWS.S3({
-          endpoint: 'http://127.0.0.1:9000',
-          region: 'ru-central1',
+          endpoint: config.getOrThrow<string>('S3_ENDPOINT'),
+          region: config.getOrThrow<string>('S3_REGION'),
+          forcePathStyle: true,
           credentials: {
             accessKeyId: config.getOrThrow('S3_ACCESS_KEY_ID'),
             secretAccessKey: config.getOrThrow('S3_SECRET_ACCESS_KEY'),

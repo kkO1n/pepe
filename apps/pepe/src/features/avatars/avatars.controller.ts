@@ -1,6 +1,7 @@
 import {
   Controller,
   Delete,
+  Get,
   HttpCode,
   Param,
   ParseIntPipe,
@@ -24,6 +25,11 @@ import { FileValidationPipe } from './pipes/file-validation.pipe';
 @UseGuards(AuthGuard)
 export class AvatarsController {
   constructor(private avatarsService: AvatarsService) {}
+
+  @Get('me')
+  getMyAvatars(@CurrentUser('sub') userId: number) {
+    return this.avatarsService.listMyAvatars(userId);
+  }
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))

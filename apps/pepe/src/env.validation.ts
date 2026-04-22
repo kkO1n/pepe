@@ -5,6 +5,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   Max,
   Min,
@@ -80,6 +81,22 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   S3_SECRET_ACCESS_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  S3_ENDPOINT: string = 'http://127.0.0.1:9000';
+
+  @IsString()
+  @IsNotEmpty()
+  S3_REGION: string = 'us-east-1';
+
+  @IsString()
+  @IsNotEmpty()
+  S3_BUCKET_NAME: string = 'dabucket';
+
+  @IsOptional()
+  @IsString()
+  S3_PUBLIC_BASE_URL?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

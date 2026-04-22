@@ -26,7 +26,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     await this.userRepository()
       .createQueryBuilder()
       .update(User)
-      .set({ balance: () => '0' })
+      .set({ balance: () => '10000' })
       .where('"deletedAt" IS NULL')
       .execute();
   }

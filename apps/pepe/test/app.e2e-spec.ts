@@ -293,6 +293,10 @@ describe('App (e2e)', () => {
     await api().get('/users?page=1&limit=10&login=abc').expect(401);
   });
 
+  it('GET /avatars/me should return 401 without bearer token', async () => {
+    await api().get('/avatars/me').expect(401);
+  });
+
   it('GET /users should return 200 with bearer token', async () => {
     const accessToken = await registerAndGetAccessToken();
 
@@ -300,6 +304,17 @@ describe('App (e2e)', () => {
       .get('/users?page=1&limit=10')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
+  });
+
+  it('GET /avatars/me should return 200 and list shape with bearer token', async () => {
+    const accessToken = await registerAndGetAccessToken();
+
+    const response = await api()
+      .get('/avatars/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(Array.isArray(response.body)).toBe(true);
   });
 
   it('GET /users should return 400 for invalid pagination values', async () => {

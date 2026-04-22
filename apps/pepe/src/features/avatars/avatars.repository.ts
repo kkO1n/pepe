@@ -1,6 +1,9 @@
 import { Inject } from '@nestjs/common';
 import { DATA_SOURCE } from '@pepe/common/constants';
-import type { IAvatarsRepository } from '@pepe/common/interfaces/avatars-repository.interface';
+import type {
+  IAvatarsRepository,
+  UserAvatarListItem,
+} from '@pepe/common/interfaces/avatars-repository.interface';
 import type { DataSource, EntityManager, Repository } from 'typeorm';
 import { BaseRepository } from '../base.repository';
 import { Avatar } from './entity/avatar.entity';
@@ -52,5 +55,28 @@ export class AvatarsRepository
         userId,
       },
     });
+  }
+
+  async getAvatarsListByUserId(userId: number): Promise<UserAvatarListItem[]> {
+    const avatars = await this.avatarsRepository().find({
+      where: { userId },
+      select: {
+        id: true,
+        url: true,
+        createdAt: true,
+        isPrimary: true,
+      },
+      order: {
+        createdAt: 'DESC',
+        id: 'DESC',
+      },
+    });
+
+    return avatars.map((avatar) => ({
+      avatarId: avatar.id,
+      path: avatar.url,
+      createdAt: avatar.createdAt,
+      isPrimary: avatar.isPrimary,
+    }));
   }
 }

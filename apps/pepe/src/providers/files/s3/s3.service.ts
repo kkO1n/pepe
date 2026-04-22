@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { type IFileService } from '../files.adapter';
 import { RemoveException } from './exceptions/remove.exception';
@@ -12,9 +13,14 @@ import * as AWS from '@aws-sdk/client-s3';
 @Injectable()
 export class S3Service implements IFileService {
   private readonly logger = new Logger(S3Service.name);
-  private readonly bucketName = 'dabucket';
+  private readonly bucketName: string;
 
-  constructor(@Inject(S3Lib) private readonly s3: AWS.S3) {}
+  constructor(
+    @Inject(S3Lib) private readonly s3: AWS.S3,
+    private readonly configService: ConfigService,
+  ) {
+    this.bucketName = this.configService.getOrThrow<string>('S3_BUCKET_NAME');
+  }
 
   async uploadFile(dto: UploadFilePayloadDto): Promise<UploadFileResultDto> {
     const { folder, file, name } = dto;
