@@ -1,6 +1,9 @@
 import { Body, Controller, Logger, Param, Post } from '@nestjs/common';
 import { EventPattern } from '@nestjs/microservices';
-import { NotificationGateway } from './features/notification/gateway/notification.gateway';
+import {
+  NotificationGateway,
+  type NotificationPayload,
+} from './features/notification/gateway/notification.gateway';
 import { NotificationStorageService } from './features/notification/notification-storage.service';
 
 type SendNotificationBody = {
@@ -27,7 +30,12 @@ export class NotificationServiceController {
     @Param('userId') userId: string,
     @Body() body: SendNotificationBody,
   ) {
-    this.notificationGateway.sendNotification(userId, body?.data);
+    const payload: NotificationPayload = {
+      type: 'message',
+      message: body?.data ?? 'hello!',
+    };
+
+    this.notificationGateway.sendNotification(userId, payload);
 
     return {
       ok: true,
@@ -37,11 +45,16 @@ export class NotificationServiceController {
   @EventPattern('transfer_completed')
   async handleTransferCompleted(event: TransferCompletedEvent) {
     const { recipientId, amount } = event;
+    const payload: NotificationPayload = {
+      type: 'transfer_completed',
+      amount,
+      senderId: event.authId,
+      recipientId,
+      transferredAt: new Date().toISOString(),
+      message: `Transfer completed: ${amount}`,
+    };
 
-    this.notificationGateway.sendNotification(
-      String(recipientId),
-      `Transfer completed: ${amount}`,
-    );
+    this.notificationGateway.sendNotification(String(recipientId), payload);
 
     try {
       await this.notificationStorageService.saveTransferNotification(event);

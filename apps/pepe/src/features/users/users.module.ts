@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { DatabaseModule } from '@pepe/providers/databases/postgresql/postgresql.module';
 import { UsersCacheInterceptor } from './interceptors/users-cache.interceptor';
@@ -9,19 +10,26 @@ import { UsersService } from './users.service';
 @Module({
   imports: [
     DatabaseModule,
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'NOTIFICATION_SERVICE',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'notification',
-            brokers: ['localhost:9092'],
+        inject: [ConfigService],
+        useFactory: (config: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: config.getOrThrow<string>('KAFKA_CLIENT_ID'),
+              brokers: config
+                .getOrThrow<string>('KAFKA_BROKERS')
+                .split(',')
+                .map((broker) => broker.trim())
+                .filter(Boolean),
+            },
+            consumer: {
+              groupId: config.getOrThrow<string>('KAFKA_CONSUMER_GROUP_ID'),
+            },
           },
-          consumer: {
-            groupId: 'notification-consumer',
-          },
-        },
+        }),
       },
     ]),
   ],

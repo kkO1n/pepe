@@ -6,6 +6,9 @@ import { AvatarsService } from './avatars.service';
 
 describe('AvatarsController', () => {
   let controller: AvatarsController;
+  const avatarsService = {
+    listMyAvatars: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -13,7 +16,7 @@ describe('AvatarsController', () => {
       providers: [
         {
           provide: AvatarsService,
-          useValue: {},
+          useValue: avatarsService,
         },
       ],
     })
@@ -22,9 +25,18 @@ describe('AvatarsController', () => {
       .compile();
 
     controller = module.get<AvatarsController>(AvatarsController);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('getMyAvatars delegates to service', async () => {
+    avatarsService.listMyAvatars.mockResolvedValueOnce([]);
+
+    await controller.getMyAvatars(5);
+
+    expect(avatarsService.listMyAvatars).toHaveBeenCalledWith(5);
   });
 });

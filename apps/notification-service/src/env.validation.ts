@@ -31,7 +31,7 @@ class EnvironmentVariables {
   @IsInt()
   @Min(1)
   @Max(65535)
-  PORT: number = 3001;
+  NOTIFICATION_SERVICE_PORT: number = 3002;
 }
 
 export function validate(config: Record<string, unknown>) {

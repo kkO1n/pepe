@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 30% 8%;
+  --foreground: 180 20% 92%;
+  --card: 210 26% 12%;
+  --card-foreground: 180 20% 92%;
+  --border: 210 18% 24%;
+  --input: 210 18% 24%;
+  --primary: 173 68% 40%;
+  --primary-foreground: 210 30% 8%;
+  --secondary: 210 20% 18%;
+  --secondary-foreground: 180 20% 92%;
+  --muted: 210 20% 15%;
+  --muted-foreground: 180 12% 68%;
+  --accent: 23 88% 59%;
+  --accent-foreground: 210 30% 8%;
+  --destructive: 0 75% 56%;
+  --destructive-foreground: 0 0% 98%;
+  --radius: 0.9rem;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-family:
+    'Avenir Next', 'Trebuchet MS', 'Segoe UI', 'Noto Sans', sans-serif;
+  background-image: none;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Gill Sans', 'Optima', 'Trebuchet MS', 'Segoe UI', sans-serif;
+}

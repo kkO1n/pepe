@@ -28,7 +28,7 @@ export class User {
   age: number;
 
   @Check('balance >= 0')
-  @Column('numeric', { precision: 12, scale: 2, default: 0 })
+  @Column('numeric', { precision: 12, scale: 2, default: 10000 })
   balance: number;
 
   @Column({ length: 1000 })
