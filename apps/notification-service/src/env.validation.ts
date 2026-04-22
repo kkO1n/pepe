@@ -23,6 +23,10 @@ class EnvironmentVariables {
   @IsNotEmpty()
   JWT_SECRET!: string;
 
+  @IsString()
+  @IsNotEmpty()
+  MONGO_URI!: string;
+
   @Type(() => Number)
   @IsInt()
   @Min(1)

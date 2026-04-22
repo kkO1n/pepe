@@ -1,6 +1,7 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Logger, Param, Post } from '@nestjs/common';
 import { EventPattern } from '@nestjs/microservices';
 import { NotificationGateway } from './features/notification/gateway/notification.gateway';
+import { NotificationStorageService } from './features/notification/notification-storage.service';
 
 type SendNotificationBody = {
   data?: string;
@@ -14,7 +15,12 @@ type TransferCompletedEvent = {
 
 @Controller()
 export class NotificationServiceController {
-  constructor(private readonly notificationGateway: NotificationGateway) {}
+  private readonly logger = new Logger(NotificationServiceController.name);
+
+  constructor(
+    private readonly notificationGateway: NotificationGateway,
+    private readonly notificationStorageService: NotificationStorageService,
+  ) {}
 
   @Post('notification/:userId')
   sendNotification(
@@ -29,11 +35,24 @@ export class NotificationServiceController {
   }
 
   @EventPattern('transfer_completed')
-  handleTransferCompleted(event: TransferCompletedEvent) {
-    const { authId, amount } = event;
+  async handleTransferCompleted(event: TransferCompletedEvent) {
+    const { recipientId, amount } = event;
+
     this.notificationGateway.sendNotification(
-      String(authId),
+      String(recipientId),
       `Transfer completed: ${amount}`,
     );
+
+    try {
+      await this.notificationStorageService.saveTransferNotification(event);
+      this.logger.log(
+        `Notification persisted for transfer authId=${event.authId} -> recipientId=${recipientId}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to persist notification authId=${event.authId} -> recipientId=${recipientId}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
   }
 }

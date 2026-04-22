@@ -94,10 +94,25 @@ services:
     tty: true
     stdin_open: true
 
+  mongo:
+    image: mongo
+    container_name: mongo
+    restart: always
+    networks: [app_network]
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - mongodata:/data/db
+
 networks:
   app_network: {}
 
 volumes:
   minio_storage:
   pgdata:
+    driver: local
+  mongodata:
     driver: local
