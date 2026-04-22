@@ -24,8 +24,8 @@
     "strictPropertyInitialization": false,
     "types": ["node", "jest"],
     "paths": {
-      "@pepe/*": ["apps/pepe/src/*"],
-      "@notification-service/*": ["apps/notification-service/src/*"]
+      "@core-api/*": ["apps/core-api/src/*"],
+      "@notifications-gateway/*": ["apps/notifications-gateway/src/*"]
     }
   }
 }
