@@ -21,7 +21,7 @@ import { S3Module } from './providers/files/s3/s3.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: ['.env'],
+      envFilePath: ['apps/core-api/.env'],
       validate,
       isGlobal: true,
     }),

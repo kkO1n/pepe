@@ -10,7 +10,7 @@ import { NotificationsGatewayService } from './notifications-gateway.service';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['apps/notifications-gateway/.env', '.env.shared', '.env'],
+      envFilePath: ['apps/notifications-gateway/.env'],
       validate,
     }),
     JwtModule.registerAsync({
