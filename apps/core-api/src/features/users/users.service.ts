@@ -1,19 +1,14 @@
-import {
-  createTransferCompletedEventV1,
-  TRANSFER_COMPLETED_TOPIC,
-} from '@contracts/index';
+import { INotificationEventsPort } from '@core-api/common/interfaces/notification-events-port.interface';
 import { IUserRepository } from '@core-api/common/interfaces/user-repository.interface';
 import { ActiveUsersQueryDto } from '@core-api/features/users/dto/active-users-query-dto';
 import { CreateUserDto } from '@core-api/features/users/dto/create-user-dto';
 import {
   BadRequestException,
   ConflictException,
-  Inject,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
 import { plainToInstance } from 'class-transformer';
 import { Transactional } from 'typeorm-transactional';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
@@ -28,14 +23,9 @@ export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(
-    @Inject('NOTIFICATION_SERVICE')
-    private readonly notificationClient: ClientKafka,
+    private readonly notificationEventsPort: INotificationEventsPort,
     private readonly userRepository: IUserRepository,
   ) {}
-
-  async resetAllBalances() {
-    return this.userRepository.resetBalances();
-  }
 
   @Transactional()
   async transfer(
@@ -94,14 +84,11 @@ export class UsersService {
         throw new NotFoundException('Recipient not found');
       }
 
-      this.notificationClient.emit(
-        TRANSFER_COMPLETED_TOPIC,
-        createTransferCompletedEventV1({
-          authId,
-          recipientId,
-          amount: parsedAmount,
-        }),
-      );
+      this.notificationEventsPort.publishTransferCompleted({
+        authId,
+        recipientId,
+        amount: parsedAmount,
+      });
 
       this.logger.log(`Transfer completed | ${transferMeta}`);
       this.logger.verbose(

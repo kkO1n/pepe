@@ -1,13 +1,13 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { UsersService } from '../users/users.service';
+import { UserBalancesService } from '../users-balances/user-balances.service';
 
 @Processor('balance-reset')
 export class BalanceResetProcessor extends WorkerHost {
   private readonly logger = new Logger(BalanceResetProcessor.name);
 
-  constructor(private readonly usersService: UsersService) {
+  constructor(private readonly userBalancesService: UserBalancesService) {
     super();
   }
 
@@ -19,7 +19,7 @@ export class BalanceResetProcessor extends WorkerHost {
 
     try {
       if (job.name === 'reset-all-balances') {
-        await this.usersService.resetAllBalances();
+        await this.userBalancesService.resetAllBalances();
         this.logger.debug(`Balances reset completed | jobId=${job.id}`);
       } else {
         this.logger.warn(

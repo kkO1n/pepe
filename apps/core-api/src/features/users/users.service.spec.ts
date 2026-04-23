@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DATA_SOURCE } from '@core-api/common/constants';
+import { INotificationEventsPort } from '@core-api/common/interfaces/notification-events-port.interface';
 import { IUserRepository } from '@core-api/common/interfaces/user-repository.interface';
 import type { CreateUserDto } from './dto/create-user-dto';
 import type { GetUsersQueryDto } from './dto/get-users-query-dto';
@@ -11,7 +12,7 @@ import { UsersService } from './users.service';
 describe('UsersService', () => {
   let service: UsersService;
   let userRepository: jest.Mocked<IUserRepository>;
-  let notificationClient: { emit: jest.Mock };
+  let notificationEventsPort: { publishTransferCompleted: jest.Mock };
 
   const buildUser = (): User => ({
     id: 1,
@@ -25,16 +26,16 @@ describe('UsersService', () => {
   });
 
   beforeEach(async () => {
-    notificationClient = {
-      emit: jest.fn(),
+    notificationEventsPort = {
+      publishTransferCompleted: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         {
-          provide: 'NOTIFICATION_SERVICE',
-          useValue: notificationClient,
+          provide: INotificationEventsPort,
+          useValue: notificationEventsPort,
         },
         {
           provide: DATA_SOURCE,
@@ -45,7 +46,6 @@ describe('UsersService', () => {
         {
           provide: IUserRepository,
           useValue: {
-            transfer: jest.fn(),
             findManyByActivity: jest.fn(),
             findManyByLogin: jest.fn(),
             findById: jest.fn(),
