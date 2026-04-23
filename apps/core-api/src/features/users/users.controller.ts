@@ -1,4 +1,4 @@
-import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import { CacheTTL } from '@nestjs/cache-manager';
 import {
   Body,
   Controller,
@@ -33,7 +33,6 @@ export class UsersController {
   @Get()
   @UseInterceptors(UsersCacheInterceptor)
   @CacheTTL(30)
-  @CacheKey('users:list')
   getUsers(@Query() query: GetUsersQueryDto) {
     return this.usersService.listUsers(query);
   }
@@ -43,7 +42,6 @@ export class UsersController {
   @Get('me')
   @UseInterceptors(UsersCacheInterceptor)
   @CacheTTL(30)
-  @CacheKey('users:me')
   async getProfile(@CurrentUser('login') login: string) {
     return await this.usersService.getPublicUserByLogin(login);
   }

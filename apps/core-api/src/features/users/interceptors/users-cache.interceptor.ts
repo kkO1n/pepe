@@ -5,12 +5,29 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+import { RequestWithUser } from '@core-api/auth/auth.guard';
 import type { Cache } from 'cache-manager';
 import { Observable, of } from 'rxjs';
 
 @Injectable()
 export class UsersCacheInterceptor extends CacheInterceptor {
   private readonly logger = new Logger(UsersCacheInterceptor.name);
+  private readonly cacheVersion = 'v1';
+
+  protected trackBy(context: ExecutionContext): string | undefined {
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
+    if (!request) return undefined;
+
+    const userId = request.user?.sub;
+    if (!userId || request.method !== 'GET') return undefined;
+
+    return [
+      'users',
+      this.cacheVersion,
+      `user:${userId}`,
+      request.originalUrl,
+    ].join('|');
+  }
 
   async intercept(
     context: ExecutionContext,
