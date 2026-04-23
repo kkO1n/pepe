@@ -1,6 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { createParamDecorator, UnauthorizedException } from '@nestjs/common';
 import type { Response, Request } from 'express';
+import { REFRESH_COOKIE_CLEAR_OPTIONS } from '../constants';
 
 export const CurrentRefreshToken = createParamDecorator(
   (_: unknown, ctx: ExecutionContext): string => {
@@ -26,11 +27,7 @@ export const ClearedRefreshToken = createParamDecorator(
       return null;
     }
 
-    res.clearCookie('refresh_token', {
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/auth',
-    });
+    res.clearCookie('refresh_token', REFRESH_COOKIE_CLEAR_OPTIONS);
 
     return token;
   },

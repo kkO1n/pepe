@@ -16,7 +16,10 @@ export abstract class IUserRepository {
   abstract findById(userId: number): Promise<User | null>;
   abstract findByLogin(login: string): Promise<User | null>;
   abstract create(createUserDto: CreateUserPayload): Promise<User>;
-  abstract update(id: number, createUserDto: UpdateUserPayload): Promise<User>;
+  abstract update(
+    id: number,
+    createUserDto: UpdateUserPayload,
+  ): Promise<User | null>;
   abstract softDeleteById(id: number): Promise<void>;
 
   abstract lockUsers(minId: number, maxId: number): Promise<User[]>;

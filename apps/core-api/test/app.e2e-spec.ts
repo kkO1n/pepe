@@ -166,6 +166,19 @@ describe('App (e2e)', () => {
     await api().post('/auth/register').send({ login: 'x' }).expect(400);
   });
 
+  it('POST /auth/register should return 409 for duplicate login', async () => {
+    const payload = buildRegisterPayload();
+    await api().post('/auth/register').send(payload).expect(201);
+
+    await api()
+      .post('/auth/register')
+      .send({
+        ...payload,
+        email: `another_${Date.now()}@example.com`,
+      })
+      .expect(409);
+  });
+
   it('POST /auth/login should return access token and set refresh cookie', async () => {
     const payload = buildRegisterPayload();
     await api().post('/auth/register').send(payload).expect(201);
@@ -345,6 +358,32 @@ describe('App (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send({ description: 'updated-description' })
       .expect(200);
+  });
+
+  it('PUT /users/:id should return 400 when password is provided', async () => {
+    const accessToken = await registerAndGetAccessToken();
+    const profileResponse = await api()
+      .get('/users/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    const userId = getNumberField(profileResponse.body as unknown, 'id');
+
+    await api()
+      .put(`/users/${userId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ password: 'new-plaintext-password' })
+      .expect(400);
+  });
+
+  it('PUT /users/:id should return 404 for missing user id', async () => {
+    const accessToken = await registerAndGetAccessToken();
+
+    await api()
+      .put('/users/999999')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ description: 'updated-description' })
+      .expect(404);
   });
 
   it('DELETE /users/:id should return 204', async () => {

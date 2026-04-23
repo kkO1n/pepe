@@ -145,11 +145,29 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     return this.userRepository().save(createUserDto);
   }
 
-  async update(id: number, putUserDto: UpdateUserPayload): Promise<User> {
-    return this.userRepository().save({
-      id,
-      ...putUserDto,
-    });
+  async update(
+    id: number,
+    putUserDto: UpdateUserPayload,
+  ): Promise<User | null> {
+    const repository = this.userRepository();
+
+    if (Object.keys(putUserDto).length === 0) {
+      return repository.findOne({ where: { id } });
+    }
+
+    const updated = await repository
+      .createQueryBuilder()
+      .update(User)
+      .set(putUserDto)
+      .where('id = :id', { id })
+      .andWhere('"deletedAt" IS NULL')
+      .execute();
+
+    if ((updated.affected ?? 0) !== 1) {
+      return null;
+    }
+
+    return repository.findOne({ where: { id } });
   }
 
   async softDeleteById(id: number): Promise<void> {

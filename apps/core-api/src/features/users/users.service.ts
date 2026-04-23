@@ -141,6 +141,9 @@ export class UsersService {
 
   async updateUser(id: number, putUserDto: UpdateUserDto) {
     const user = await this.userRepository.update(id, putUserDto);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
     return plainToInstance(UserResponseDto, user, {
       excludeExtraneousValues: true,

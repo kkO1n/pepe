@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DATA_SOURCE } from '@core-api/common/constants';
@@ -143,6 +144,15 @@ describe('UsersService', () => {
       description: 'updated',
     });
     expect('password' in result).toBe(false);
+  });
+
+  it('updateUser throws NotFoundException when user does not exist', async () => {
+    const dto: UpdateUserDto = { description: 'updated' };
+    userRepository.update.mockResolvedValue(null);
+
+    await expect(service.updateUser(777, dto)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('deleteUser resolves without error', async () => {
