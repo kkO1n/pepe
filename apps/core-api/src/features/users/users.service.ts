@@ -1,4 +1,11 @@
 import {
+  createTransferCompletedEventV1,
+  TRANSFER_COMPLETED_TOPIC,
+} from '@contracts/index';
+import { IUserRepository } from '@core-api/common/interfaces/user-repository.interface';
+import { ActiveUsersQueryDto } from '@core-api/features/users/dto/active-users-query-dto';
+import { CreateUserDto } from '@core-api/features/users/dto/create-user-dto';
+import {
   BadRequestException,
   ConflictException,
   Inject,
@@ -7,9 +14,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { IUserRepository } from '@core-api/common/interfaces/user-repository.interface';
-import { ActiveUsersQueryDto } from '@core-api/features/users/dto/active-users-query-dto';
-import { CreateUserDto } from '@core-api/features/users/dto/create-user-dto';
 import { plainToInstance } from 'class-transformer';
 import { Transactional } from 'typeorm-transactional';
 import { GetUsersQueryDto } from './dto/get-users-query-dto';
@@ -90,11 +94,14 @@ export class UsersService {
         throw new NotFoundException('Recipient not found');
       }
 
-      this.notificationClient.emit('transfer_completed', {
-        authId,
-        recipientId,
-        amount: parsedAmount,
-      });
+      this.notificationClient.emit(
+        TRANSFER_COMPLETED_TOPIC,
+        createTransferCompletedEventV1({
+          authId,
+          recipientId,
+          amount: parsedAmount,
+        }),
+      );
 
       this.logger.log(`Transfer completed | ${transferMeta}`);
       this.logger.verbose(

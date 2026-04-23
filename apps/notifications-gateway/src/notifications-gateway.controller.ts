@@ -1,6 +1,10 @@
 import { Body, Controller, Logger, Param, Post } from '@nestjs/common';
 import { EventPattern } from '@nestjs/microservices';
 import {
+  TRANSFER_COMPLETED_TOPIC,
+  type TransferCompletedEventV1,
+} from '@contracts/index';
+import {
   NotificationGateway,
   type NotificationPayload,
 } from './features/notification/gateway/notification.gateway';
@@ -8,12 +12,6 @@ import { NotificationStorageService } from './features/notification/notification
 
 type SendNotificationBody = {
   data?: string;
-};
-
-type TransferCompletedEvent = {
-  authId: number;
-  recipientId: number;
-  amount: number;
 };
 
 @Controller()
@@ -42,13 +40,13 @@ export class NotificationsGatewayController {
     };
   }
 
-  @EventPattern('transfer_completed')
-  async handleTransferCompleted(event: TransferCompletedEvent) {
-    const { recipientId, amount } = event;
+  @EventPattern(TRANSFER_COMPLETED_TOPIC)
+  async handleTransferCompleted(event: TransferCompletedEventV1) {
+    const { authId, recipientId, amount } = event.payload;
     const payload: NotificationPayload = {
       type: 'transfer_completed',
       amount,
-      senderId: event.authId,
+      senderId: authId,
       recipientId,
       transferredAt: new Date().toISOString(),
       message: `Transfer completed: ${amount}`,
@@ -57,13 +55,15 @@ export class NotificationsGatewayController {
     this.notificationGateway.sendNotification(String(recipientId), payload);
 
     try {
-      await this.notificationStorageService.saveTransferNotification(event);
+      await this.notificationStorageService.saveTransferNotification(
+        event.payload,
+      );
       this.logger.log(
-        `Notification persisted for transfer authId=${event.authId} -> recipientId=${recipientId}`,
+        `Notification persisted for transfer authId=${authId} -> recipientId=${recipientId}`,
       );
     } catch (error) {
       this.logger.error(
-        `Failed to persist notification authId=${event.authId} -> recipientId=${recipientId}`,
+        `Failed to persist notification authId=${authId} -> recipientId=${recipientId}`,
         error instanceof Error ? error.stack : String(error),
       );
     }

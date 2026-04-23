@@ -1,16 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import type { TransferCompletedPayloadV1 } from '@contracts/index';
 import {
   Notification,
   NotificationDocument,
 } from './schemas/notification.schema';
-
-type TransferCompletedEvent = {
-  authId: number;
-  recipientId: number;
-  amount: number;
-};
 
 @Injectable()
 export class NotificationStorageService {
@@ -19,7 +14,9 @@ export class NotificationStorageService {
     private readonly notificationModel: Model<NotificationDocument>,
   ) {}
 
-  async saveTransferNotification(event: TransferCompletedEvent): Promise<void> {
+  async saveTransferNotification(
+    event: TransferCompletedPayloadV1,
+  ): Promise<void> {
     await this.notificationModel.create({
       senderId: event.authId,
       recipientId: event.recipientId,

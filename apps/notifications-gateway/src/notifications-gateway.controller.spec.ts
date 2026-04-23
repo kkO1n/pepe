@@ -1,5 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { createTransferCompletedEventV1 } from '@contracts/index';
 import { NotificationGateway } from './features/notification/gateway/notification.gateway';
 import { NotificationStorageService } from './features/notification/notification-storage.service';
 import { NotificationsGatewayController } from './notifications-gateway.controller';
@@ -40,11 +41,13 @@ describe('NotificationsGatewayController', () => {
   });
 
   it('emits structured transfer notification payload', async () => {
-    await notificationServiceController.handleTransferCompleted({
-      authId: 5,
-      recipientId: 8,
-      amount: 12.34,
-    });
+    await notificationServiceController.handleTransferCompleted(
+      createTransferCompletedEventV1({
+        authId: 5,
+        recipientId: 8,
+        amount: 12.34,
+      }),
+    );
 
     expect(notificationGateway.sendNotification).toHaveBeenCalledWith(
       '8',
@@ -58,6 +61,10 @@ describe('NotificationsGatewayController', () => {
     );
     expect(
       notificationStorageService.saveTransferNotification,
-    ).toHaveBeenCalled();
+    ).toHaveBeenCalledWith({
+      authId: 5,
+      recipientId: 8,
+      amount: 12.34,
+    });
   });
 });

@@ -25,7 +25,8 @@
     "types": ["node", "jest"],
     "paths": {
       "@core-api/*": ["apps/core-api/src/*"],
-      "@notifications-gateway/*": ["apps/notifications-gateway/src/*"]
+      "@notifications-gateway/*": ["apps/notifications-gateway/src/*"],
+      "@contracts/*": ["libs/contracts/src/*"]
     }
   }
 }

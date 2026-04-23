@@ -23,7 +23,6 @@ export function getDatabaseOptions(
     password: env.DB_PASSWORD,
     database: env.DB_NAME,
     synchronize: env.DB_SYNCHRONIZE,
-    // Register local entities explicitly to avoid glob-based imports touching node_modules.
     entities: [User, Avatar],
     ...overrides,
   };
