@@ -10,7 +10,7 @@ import { REDIS } from '@core-api/providers/databases/redis/redis.module';
 import request from 'supertest';
 import type { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
-import './test-env';
+import { coreApiTestEnv } from './test-env';
 import {
   cleanupDatabase,
   ensureTestDatabase,
@@ -103,7 +103,7 @@ describe('App (e2e)', () => {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(
-        `E2E Postgres setup failed for database "${process.env.DB_NAME ?? 'db_test'}": ${message}`,
+        `E2E Postgres setup failed for database "${coreApiTestEnv.DB_NAME}": ${message}`,
       );
     }
 

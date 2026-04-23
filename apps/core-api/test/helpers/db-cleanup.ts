@@ -1,13 +1,14 @@
 import { DataSource } from 'typeorm';
 import { createMigrationDataSource } from '../../src/providers/databases/postgresql/typeorm-migration.datasource';
+import { coreApiTestEnv } from '../test-env';
 
 function getDbConfig() {
   return {
-    host: process.env.DB_HOST ?? 'localhost',
-    port: Number(process.env.DB_PORT ?? 5430),
-    username: process.env.DB_USER ?? 'root',
-    password: process.env.DB_PASSWORD ?? 'root',
-    database: process.env.DB_NAME ?? 'db_test',
+    host: coreApiTestEnv.DB_HOST,
+    port: coreApiTestEnv.DB_PORT,
+    username: coreApiTestEnv.DB_USER,
+    password: coreApiTestEnv.DB_PASSWORD,
+    database: coreApiTestEnv.DB_NAME,
   };
 }
 

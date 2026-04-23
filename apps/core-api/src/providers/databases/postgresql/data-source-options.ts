@@ -2,26 +2,27 @@ import { Avatar } from '@core-api/features/avatars/entity/avatar.entity';
 import { User } from '@core-api/features/users/entity/user.entity';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
-function parsePort(value: string | undefined, fallback: number): number {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function parseSynchronize(value: string | undefined): boolean {
-  return value === 'true';
-}
+type DatabaseEnv = {
+  DB_HOST: string;
+  DB_PORT: number;
+  DB_USER: string;
+  DB_PASSWORD: string;
+  DB_NAME: string;
+  DB_SYNCHRONIZE: boolean;
+};
 
 export function getDatabaseOptions(
   overrides: Partial<PostgresConnectionOptions> = {},
+  env: DatabaseEnv,
 ): PostgresConnectionOptions {
   return {
     type: 'postgres',
-    host: process.env.DB_HOST ?? 'localhost',
-    port: parsePort(process.env.DB_PORT, 5430),
-    username: process.env.DB_USER ?? 'root',
-    password: process.env.DB_PASSWORD ?? 'root',
-    database: process.env.DB_NAME ?? 'db',
-    synchronize: parseSynchronize(process.env.DB_SYNCHRONIZE ?? 'true'),
+    host: env.DB_HOST,
+    port: env.DB_PORT,
+    username: env.DB_USER,
+    password: env.DB_PASSWORD,
+    database: env.DB_NAME,
+    synchronize: env.DB_SYNCHRONIZE,
     // Register local entities explicitly to avoid glob-based imports touching node_modules.
     entities: [User, Avatar],
     ...overrides,

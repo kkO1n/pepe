@@ -17,7 +17,7 @@ enum Environment {
 
 class EnvironmentVariables {
   @IsEnum(Environment)
-  NODE_ENV: Environment = Environment.Development;
+  NODE_ENV!: Environment;
 
   @IsString()
   @IsNotEmpty()
@@ -27,11 +27,23 @@ class EnvironmentVariables {
   @IsNotEmpty()
   MONGO_URI!: string;
 
+  @IsString()
+  @IsNotEmpty()
+  KAFKA_CLIENT_ID!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  KAFKA_BROKERS!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  KAFKA_CONSUMER_GROUP_ID!: string;
+
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(65535)
-  NOTIFICATION_SERVICE_PORT: number = 3002;
+  NOTIFICATION_SERVICE_PORT!: number;
 }
 
 export function validate(config: Record<string, unknown>) {

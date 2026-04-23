@@ -19,8 +19,14 @@ enum Environment {
 }
 
 export class EnvironmentVariables {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  PORT!: number;
+
   @IsEnum(Environment)
-  NODE_ENV: Environment = Environment.Development;
+  NODE_ENV!: Environment;
 
   @IsString()
   @IsNotEmpty()
@@ -34,45 +40,47 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(4)
   @Max(15)
-  SALT_ROUNDS: number = 10;
+  SALT_ROUNDS!: number;
 
   @IsString()
   @IsNotEmpty()
-  DB_HOST: string = 'localhost';
+  DB_HOST!: string;
 
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(65535)
-  DB_PORT: number = 5430;
+  DB_PORT!: number;
 
   @IsString()
   @IsNotEmpty()
-  DB_USER: string = 'root';
-
-  @IsString()
-  DB_PASSWORD: string = 'root';
+  DB_USER!: string;
 
   @IsString()
   @IsNotEmpty()
-  DB_NAME: string = 'db';
+  DB_PASSWORD!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  DB_NAME!: string;
 
   @Transform(
     ({ value }) =>
       value === true || value === 'true' || value === 1 || value === '1',
   )
   @IsBoolean()
-  DB_SYNCHRONIZE: boolean = false;
+  DB_SYNCHRONIZE!: boolean;
 
+  @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
-  REDIS_PORT: number = 6379;
+  REDIS_PORT!: number;
   @IsString()
   @IsNotEmpty()
-  REDIS_HOST: string = 'localhost';
+  REDIS_HOST!: string;
   @IsString()
   @IsNotEmpty()
-  REDIS_PASSWORD: string = 'crazyassredispasswrod';
+  REDIS_PASSWORD!: string;
 
   @IsString()
   @IsNotEmpty()
@@ -84,15 +92,15 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  S3_ENDPOINT: string = 'http://127.0.0.1:9000';
+  S3_ENDPOINT!: string;
 
   @IsString()
   @IsNotEmpty()
-  S3_REGION: string = 'us-east-1';
+  S3_REGION!: string;
 
   @IsString()
   @IsNotEmpty()
-  S3_BUCKET_NAME: string = 'dabucket';
+  S3_BUCKET_NAME!: string;
 
   @IsOptional()
   @IsString()
@@ -100,19 +108,19 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  NOTIFICATION_SERVICE_ORIGIN: string = 'http://127.0.0.1:3002';
+  NOTIFICATION_SERVICE_ORIGIN!: string;
 
   @IsString()
   @IsNotEmpty()
-  KAFKA_CLIENT_ID: string = 'notification';
+  KAFKA_CLIENT_ID!: string;
 
   @IsString()
   @IsNotEmpty()
-  KAFKA_BROKERS: string = 'localhost:9092';
+  KAFKA_BROKERS!: string;
 
   @IsString()
   @IsNotEmpty()
-  KAFKA_CONSUMER_GROUP_ID: string = 'notification-consumer';
+  KAFKA_CONSUMER_GROUP_ID!: string;
 }
 
 export function validate(config: Record<string, unknown>) {

@@ -1,17 +1,20 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
 export const REDIS = Symbol('REDIS');
 
 @Module({
+  imports: [ConfigModule],
   providers: [
     {
       provide: REDIS,
-      useFactory: () =>
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) =>
         new Redis({
-          host: process.env.REDIS_HOST,
-          port: Number(process.env.REDIS_PORT),
-          password: process.env.REDIS_PASSWORD,
+          host: config.getOrThrow<string>('REDIS_HOST'),
+          port: config.getOrThrow<number>('REDIS_PORT'),
+          password: config.getOrThrow<string>('REDIS_PASSWORD'),
         }),
     },
   ],
