@@ -8,7 +8,8 @@
   "moduleNameMapper": {
     "^@core-api/(.*)$": "<rootDir>/src/$1",
     "^@notifications-gateway/(.*)$": "<rootDir>/../notifications-gateway/src/$1",
-    "^@contracts/(.*)$": "<rootDir>/../../libs/contracts/src/$1"
+    "^@contracts/(.*)$": "<rootDir>/../../libs/contracts/src/$1",
+    "^@observability/(.*)$": "<rootDir>/../../libs/observability/src/$1"
   },
   "testEnvironment": "node"
 }

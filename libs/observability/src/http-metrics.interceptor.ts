@@ -6,14 +6,14 @@ import {
 } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { finalize, type Observable } from 'rxjs';
-import { MetricsService } from './metrics.service';
+import { BaseMetricsService } from './base-metrics.service';
 
 @Injectable()
 export class HttpMetricsInterceptor implements NestInterceptor {
-  constructor(private readonly metricsService: MetricsService) {}
+  constructor(private readonly metricsService: BaseMetricsService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    if (context.getType() !== 'http' || !this.metricsService.isEnabled()) {
+    if (context.getType() !== 'http') {
       return next.handle();
     }
 
@@ -38,22 +38,18 @@ export class HttpMetricsInterceptor implements NestInterceptor {
   }
 
   private resolveRoute(request: Request) {
-    const route = request.route as unknown;
-    if (route && typeof route === 'object' && 'path' in route) {
-      const routePath = (route as { path?: unknown }).path;
-      if (typeof routePath === 'string' && routePath.length > 0) {
-        const baseUrl = request.baseUrl ?? '';
-        return `${baseUrl}${routePath}`;
-      }
+    const route = request.route as { path?: string } | undefined;
+    if (typeof route?.path === 'string' && route.path.length > 0) {
+      return `${request.baseUrl ?? ''}${route.path}`;
     }
 
-    const requestPath = request.path as unknown;
-    if (typeof requestPath === 'string' && requestPath.length > 0) {
+    const requestPath = request.path;
+    if (requestPath.length > 0) {
       return requestPath;
     }
 
-    const originalUrl = request.originalUrl as unknown;
-    if (typeof originalUrl === 'string' && originalUrl.length > 0) {
+    const originalUrl = request.originalUrl;
+    if (originalUrl.length > 0) {
       return originalUrl.split('?')[0];
     }
 

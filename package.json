@@ -105,7 +105,8 @@
     "moduleNameMapper": {
       "^@core-api/(.*)$": "<rootDir>/apps/core-api/src/$1",
       "^@notifications-gateway/(.*)$": "<rootDir>/apps/notifications-gateway/src/$1",
-      "^@contracts/(.*)$": "<rootDir>/libs/contracts/src/$1"
+      "^@contracts/(.*)$": "<rootDir>/libs/contracts/src/$1",
+      "^@observability/(.*)$": "<rootDir>/libs/observability/src/$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

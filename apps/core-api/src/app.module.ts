@@ -9,51 +9,16 @@ import { CacheableMemory } from 'cacheable';
 import { randomUUID } from 'crypto';
 import { Keyv } from 'keyv';
 import { LoggerModule } from 'nestjs-pino';
+import { HttpMetricsInterceptor } from '@observability/http-metrics.interceptor';
 import { AuthModule } from './auth/auth.module';
 import { DBExceptionFilter } from './common/filters/db-exception.filter';
 import { validate } from './env.validation';
 import { AvatarsModule } from './features/avatars/avatars.module';
 import { BalanceModule } from './features/balance/balance.module';
 import { UsersModule } from './features/users/users.module';
-import { HttpMetricsInterceptor } from './observability/http-metrics.interceptor';
 import { ObservabilityModule } from './observability/observability.module';
 import { RedisModule } from './providers/databases/redis/redis.module';
 import { S3Module } from './providers/files/s3/s3.module';
-
-function toBoolean(value: unknown, defaultValue: boolean) {
-  if (value === undefined || value === null) {
-    return defaultValue;
-  }
-
-  if (typeof value === 'boolean') {
-    return value;
-  }
-
-  if (typeof value === 'number') {
-    return value === 1;
-  }
-
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
-    if (normalized === 'true' || normalized === '1') {
-      return true;
-    }
-    if (normalized === 'false' || normalized === '0') {
-      return false;
-    }
-  }
-
-  return defaultValue;
-}
-
-function hasPinoPrettyInstalled() {
-  try {
-    require.resolve('pino-pretty');
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 @Module({
   imports: [
@@ -75,25 +40,23 @@ function hasPinoPrettyInstalled() {
       useFactory: (config: ConfigService) => {
         const serviceName = config.get<string>('SERVICE_NAME') ?? 'core-api';
         const env = config.getOrThrow<string>('NODE_ENV');
-        const containerized = toBoolean(config.get('CONTAINERIZED'), false);
-        const pretty =
-          toBoolean(config.get('LOG_PRETTY'), false) && !containerized;
         const level = config.get<string>('LOG_LEVEL') ?? 'info';
-        const prettyTransport =
-          pretty && hasPinoPrettyInstalled()
-            ? {
-                target: 'pino-pretty',
-                options: {
-                  colorize: true,
-                  singleLine: true,
-                },
-              }
-            : undefined;
+        const pretty =
+          (config.get<boolean>('LOG_PRETTY') ?? false) &&
+          !(config.get<boolean>('CONTAINERIZED') ?? false);
 
         return {
           pinoHttp: {
             level,
-            transport: prettyTransport,
+            transport: pretty
+              ? {
+                  target: 'pino-pretty',
+                  options: {
+                    colorize: true,
+                    singleLine: true,
+                  },
+                }
+              : undefined,
             genReqId(req) {
               return req.headers['x-request-id'] || randomUUID();
             },

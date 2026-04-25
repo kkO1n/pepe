@@ -19,15 +19,13 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const metricsService = app.get(MetricsService);
 
-  if (metricsService.isEnabled()) {
-    app.use(
-      metricsService.getMetricsPath(),
-      async (_req: Request, res: Response) => {
-        res.type(metricsService.getContentType());
-        res.send(await metricsService.getMetrics());
-      },
-    );
-  }
+  app.use(
+    metricsService.getMetricsPath(),
+    async (_req: Request, res: Response) => {
+      res.type(metricsService.getContentType());
+      res.send(await metricsService.getMetrics());
+    },
+  );
 
   app.use(
     '/notifications/socket.io',

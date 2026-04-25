@@ -14,15 +14,13 @@ async function bootstrap() {
 
   app.useLogger(app.get(Logger));
 
-  if (metricsService.isEnabled()) {
-    app.use(
-      metricsService.getMetricsPath(),
-      async (_req: Request, res: Response) => {
-        res.type(metricsService.getContentType());
-        res.send(await metricsService.getMetrics());
-      },
-    );
-  }
+  app.use(
+    metricsService.getMetricsPath(),
+    async (_req: Request, res: Response) => {
+      res.type(metricsService.getContentType());
+      res.send(await metricsService.getMetrics());
+    },
+  );
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.KAFKA,

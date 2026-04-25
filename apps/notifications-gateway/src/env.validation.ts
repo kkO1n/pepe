@@ -66,14 +66,6 @@ class EnvironmentVariables {
   CONTAINERIZED?: boolean;
 
   @IsOptional()
-  @Transform(
-    ({ value }) =>
-      value === true || value === 'true' || value === 1 || value === '1',
-  )
-  @IsBoolean()
-  METRICS_ENABLED?: boolean;
-
-  @IsOptional()
   @IsString()
   METRICS_PATH?: string;
 

@@ -26,7 +26,8 @@
     "paths": {
       "@core-api/*": ["apps/core-api/src/*"],
       "@notifications-gateway/*": ["apps/notifications-gateway/src/*"],
-      "@contracts/*": ["libs/contracts/src/*"]
+      "@contracts/*": ["libs/contracts/src/*"],
+      "@observability/*": ["libs/observability/src/*"]
     }
   }
 }
