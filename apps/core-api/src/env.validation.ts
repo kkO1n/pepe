@@ -71,6 +71,30 @@ export class EnvironmentVariables {
   @IsBoolean()
   DB_SYNCHRONIZE!: boolean;
 
+  @IsOptional()
+  @IsString()
+  SERVICE_NAME?: string;
+
+  @IsOptional()
+  @IsString()
+  LOG_LEVEL?: string;
+
+  @IsOptional()
+  @Transform(
+    ({ value }) =>
+      value === true || value === 'true' || value === 1 || value === '1',
+  )
+  @IsBoolean()
+  LOG_PRETTY?: boolean;
+
+  @IsOptional()
+  @Transform(
+    ({ value }) =>
+      value === true || value === 'true' || value === 1 || value === '1',
+  )
+  @IsBoolean()
+  CONTAINERIZED?: boolean;
+
   @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
@@ -121,6 +145,18 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   KAFKA_CONSUMER_GROUP_ID!: string;
+
+  @IsOptional()
+  @Transform(
+    ({ value }) =>
+      value === true || value === 'true' || value === 1 || value === '1',
+  )
+  @IsBoolean()
+  METRICS_ENABLED?: boolean;
+
+  @IsOptional()
+  @IsString()
+  METRICS_PATH?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

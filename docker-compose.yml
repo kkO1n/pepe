@@ -40,8 +40,12 @@ services:
     image: redis:alpine3.16
     container_name: redis-wsbe
     env_file: .env.infra
-    command: >
-      --requirepass $${REDIS_PASSWORD} --port $${REDIS_PORT}
+    command:
+      [
+        'sh',
+        '-c',
+        'redis-server --requirepass "$$REDIS_PASSWORD" --port "$$REDIS_PORT"',
+      ]
     ports:
       - '${REDIS_PORT:-6379}:${REDIS_PORT:-6379}'
     restart: unless-stopped
@@ -119,6 +123,100 @@ services:
     volumes:
       - mongodata:/data/db
 
+  core-api:
+    build:
+      context: .
+      dockerfile: apps/core-api/Dockerfile
+    container_name: core-api
+    env_file:
+      - apps/core-api/.env
+    environment:
+      NODE_ENV: development
+      LOG_PRETTY: 'false'
+      CONTAINERIZED: 'true'
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BROKERS: kafka:29092
+      S3_ENDPOINT: http://minio:9000
+      NOTIFICATION_SERVICE_ORIGIN: http://host.docker.internal:3002
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    depends_on:
+      - redis
+      - postgres
+      - kafka
+      - minio
+      - minio-init
+    ports:
+      - '3001:3001'
+    restart: unless-stopped
+    networks:
+      - default
+      - app_network
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: prometheus
+    depends_on:
+      - core-api
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./ops/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.1.1
+    container_name: loki
+    ports:
+      - '3100:3100'
+    volumes:
+      - ./ops/observability/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.108.0
+    container_name: otel-collector
+    depends_on:
+      - core-api
+      - loki
+    command:
+      - --config=/etc/otelcol-contrib/config.yaml
+    user: '0:0'
+    privileged: true
+    volumes:
+      - ./ops/observability/otel-collector/config.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro,z
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    container_name: grafana
+    depends_on:
+      - prometheus
+      - loki
+    ports:
+      - '3003:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./ops/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./ops/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    restart: unless-stopped
+
 networks:
   app_network: {}
 
@@ -128,3 +226,6 @@ volumes:
     driver: local
   mongodata:
     driver: local
+  prometheus_data:
+  loki_data:
+  grafana_data:

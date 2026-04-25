@@ -3,9 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { type Request, type Response } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { Logger } from 'nestjs-pino';
 import { initializeTransactionalContext } from 'typeorm-transactional';
+import { MetricsService } from './observability/metrics.service';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -15,6 +17,18 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   app.use(cookieParser());
   const configService = app.get(ConfigService);
+  const metricsService = app.get(MetricsService);
+
+  if (metricsService.isEnabled()) {
+    app.use(
+      metricsService.getMetricsPath(),
+      async (_req: Request, res: Response) => {
+        res.type(metricsService.getContentType());
+        res.send(await metricsService.getMetrics());
+      },
+    );
+  }
+
   app.use(
     '/notifications/socket.io',
     createProxyMiddleware({

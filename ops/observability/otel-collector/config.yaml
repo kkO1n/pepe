@@ -1,0 +1,25 @@
+receivers:
+  filelog:
+    include:
+      - /var/lib/docker/containers/*/*-json.log
+    start_at: end
+    include_file_path: true
+    operators:
+      - type: json_parser
+      - type: move
+        from: attributes.log
+        to: body
+
+processors:
+  batch: {}
+
+exporters:
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+
+service:
+  pipelines:
+    logs:
+      receivers: [filelog]
+      processors: [batch]
+      exporters: [loki]

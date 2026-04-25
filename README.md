@@ -25,6 +25,31 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Local Observability Stack
+
+This repo includes a local observability setup for `core-api`:
+
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3003` (`admin` / `admin`)
+- Loki: `http://localhost:3100`
+- Core API metrics endpoint: `http://localhost:3001/metrics`
+
+Start everything:
+
+```bash
+docker compose up -d --build core-api prometheus loki otel-collector grafana
+```
+
+Useful checks:
+
+```bash
+# Prometheus target state
+docker compose exec prometheus wget -qO- http://127.0.0.1:9090/api/v1/targets
+
+# Core API metrics
+docker compose exec core-api wget -qO- http://127.0.0.1:3001/metrics
+```
+
 ## Project setup
 
 ```bash
