@@ -73,14 +73,14 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum(rate(http_requests_total{service=\"core-api\"}[5m]))",
+          "expr": "sum(rate(notifications_emitted_total{service=\"notifications-gateway\"}[5m]))",
           "instant": true,
           "legendFormat": "",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Request Rate",
+      "title": "Notification Emit Rate",
       "type": "stat"
     },
     {
@@ -134,7 +134,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum(rate(http_requests_total{service=\"core-api\",status_code=~\"5..\"}[5m]))",
+          "expr": "sum(rate(http_requests_total{service=\"notifications-gateway\",status_code=~\"5..\"}[5m]))",
           "instant": true,
           "legendFormat": "",
           "range": false,
@@ -182,7 +182,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"core-api\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"notifications-gateway\"}[5m])) by (le))",
           "legendFormat": "p95",
           "range": true,
           "refId": "A"
@@ -217,19 +217,19 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "{service_name=\"unknown_service\"} | json | body =~ \".*\\\\\\\"service\\\\\\\":\\\\\\\"core-api\\\\\\\".*\"",
+          "expr": "{service_name=\"unknown_service\"} | json | body =~ \".*\\\\\\\"service\\\\\\\":\\\\\\\"notifications-gateway\\\\\\\".*\"",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Core API Logs",
+      "title": "Notifications Gateway Logs",
       "type": "logs"
     }
   ],
   "refresh": "10s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["core-api", "observability"],
+  "tags": ["notifications-gateway", "observability"],
   "templating": {
     "list": []
   },
@@ -239,8 +239,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Core API Observability",
-  "uid": "core-api-observability",
+  "title": "Notifications Gateway Observability",
+  "uid": "notifications-gateway-observability",
   "version": 1,
   "weekStart": ""
 }

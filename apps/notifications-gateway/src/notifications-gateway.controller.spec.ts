@@ -4,11 +4,13 @@ import { createTransferCompletedEventV1 } from '@contracts/index';
 import { NotificationGateway } from './features/notification/gateway/notification.gateway';
 import { NotificationStorageService } from './features/notification/notification-storage.service';
 import { NotificationsGatewayController } from './notifications-gateway.controller';
+import { MetricsService } from './observability/metrics.service';
 
 describe('NotificationsGatewayController', () => {
   let notificationServiceController: NotificationsGatewayController;
   let notificationGateway: { sendNotification: jest.Mock };
   let notificationStorageService: { saveTransferNotification: jest.Mock };
+  let metricsService: { observeNotification: jest.Mock };
 
   beforeEach(async () => {
     notificationGateway = {
@@ -16,6 +18,9 @@ describe('NotificationsGatewayController', () => {
     };
     notificationStorageService = {
       saveTransferNotification: jest.fn(),
+    };
+    metricsService = {
+      observeNotification: jest.fn(),
     };
     const app: TestingModule = await Test.createTestingModule({
       controllers: [NotificationsGatewayController],
@@ -27,6 +32,10 @@ describe('NotificationsGatewayController', () => {
         {
           provide: NotificationStorageService,
           useValue: notificationStorageService,
+        },
+        {
+          provide: MetricsService,
+          useValue: metricsService,
         },
       ],
     }).compile();
@@ -66,5 +75,9 @@ describe('NotificationsGatewayController', () => {
       recipientId: 8,
       amount: 12.34,
     });
+    expect(metricsService.observeNotification).toHaveBeenCalledWith(
+      'kafka',
+      'transfer_completed',
+    );
   });
 });

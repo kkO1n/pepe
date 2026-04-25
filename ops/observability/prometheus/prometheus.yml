@@ -8,3 +8,8 @@ scrape_configs:
     static_configs:
       - targets:
           - core-api:3001
+  - job_name: notifications-gateway
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - notifications-gateway:3002

@@ -33,11 +33,15 @@ This repo includes a local observability setup for `core-api`:
 - Grafana: `http://localhost:3003` (`admin` / `admin`)
 - Loki: `http://localhost:3100`
 - Core API metrics endpoint: `http://localhost:3001/metrics`
+- Notifications gateway metrics endpoint: `http://localhost:3002/metrics`
 
 Start everything:
 
 ```bash
 docker compose up -d --build core-api prometheus loki otel-collector grafana
+
+# phase 2 (includes notifications-gateway)
+docker compose up -d --build core-api notifications-gateway prometheus loki otel-collector grafana
 ```
 
 Useful checks:

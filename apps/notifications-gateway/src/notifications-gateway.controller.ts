@@ -1,14 +1,15 @@
-import { Body, Controller, Logger, Param, Post } from '@nestjs/common';
-import { EventPattern } from '@nestjs/microservices';
 import {
   TRANSFER_COMPLETED_TOPIC,
   type TransferCompletedEventV1,
 } from '@contracts/index';
+import { Body, Controller, Logger, Param, Post } from '@nestjs/common';
+import { EventPattern } from '@nestjs/microservices';
 import {
   NotificationGateway,
   type NotificationPayload,
 } from './features/notification/gateway/notification.gateway';
 import { NotificationStorageService } from './features/notification/notification-storage.service';
+import { MetricsService } from './observability/metrics.service';
 
 type SendNotificationBody = {
   data?: string;
@@ -21,6 +22,7 @@ export class NotificationsGatewayController {
   constructor(
     private readonly notificationGateway: NotificationGateway,
     private readonly notificationStorageService: NotificationStorageService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   @Post('notification/:userId')
@@ -34,6 +36,7 @@ export class NotificationsGatewayController {
     };
 
     this.notificationGateway.sendNotification(userId, payload);
+    this.metricsService.observeNotification('http', payload.type);
 
     return {
       ok: true,
@@ -53,6 +56,7 @@ export class NotificationsGatewayController {
     };
 
     this.notificationGateway.sendNotification(String(recipientId), payload);
+    this.metricsService.observeNotification('kafka', payload.type);
 
     try {
       await this.notificationStorageService.saveTransferNotification(

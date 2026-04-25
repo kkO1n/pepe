@@ -140,7 +140,7 @@ services:
       REDIS_PORT: 6379
       KAFKA_BROKERS: kafka:29092
       S3_ENDPOINT: http://minio:9000
-      NOTIFICATION_SERVICE_ORIGIN: http://host.docker.internal:3002
+      NOTIFICATION_SERVICE_ORIGIN: http://notifications-gateway:3002
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     depends_on:
@@ -149,8 +149,32 @@ services:
       - kafka
       - minio
       - minio-init
+      - notifications-gateway
     ports:
       - '3001:3001'
+    restart: unless-stopped
+    networks:
+      - default
+      - app_network
+
+  notifications-gateway:
+    build:
+      context: .
+      dockerfile: apps/notifications-gateway/Dockerfile
+    container_name: notifications-gateway
+    env_file:
+      - apps/notifications-gateway/.env
+    environment:
+      NODE_ENV: development
+      LOG_PRETTY: 'false'
+      CONTAINERIZED: 'true'
+      MONGO_URI: mongodb://root:root@mongo:27017/notifications?authSource=admin
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      - mongo
+      - kafka
+    ports:
+      - '3002:3002'
     restart: unless-stopped
     networks:
       - default
@@ -210,7 +234,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./ops/observability/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./ops/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./ops/observability/grafana/dashboards:/etc/grafana/dashboards:ro
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin

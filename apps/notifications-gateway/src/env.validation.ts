@@ -1,8 +1,10 @@
-import { plainToInstance, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Max,
   Min,
@@ -38,6 +40,42 @@ class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   KAFKA_CONSUMER_GROUP_ID!: string;
+
+  @IsOptional()
+  @IsString()
+  SERVICE_NAME?: string;
+
+  @IsOptional()
+  @IsString()
+  LOG_LEVEL?: string;
+
+  @IsOptional()
+  @Transform(
+    ({ value }) =>
+      value === true || value === 'true' || value === 1 || value === '1',
+  )
+  @IsBoolean()
+  LOG_PRETTY?: boolean;
+
+  @IsOptional()
+  @Transform(
+    ({ value }) =>
+      value === true || value === 'true' || value === 1 || value === '1',
+  )
+  @IsBoolean()
+  CONTAINERIZED?: boolean;
+
+  @IsOptional()
+  @Transform(
+    ({ value }) =>
+      value === true || value === 'true' || value === 1 || value === '1',
+  )
+  @IsBoolean()
+  METRICS_ENABLED?: boolean;
+
+  @IsOptional()
+  @IsString()
+  METRICS_PATH?: string;
 
   @Type(() => Number)
   @IsInt()
