@@ -25,6 +25,37 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Architecture Overview
+
+This is a TypeScript monorepo with:
+
+- `apps/core-api`: main HTTP API (NestJS), business logic, background jobs
+- `apps/notifications-gateway`: real-time notifications service (NestJS + WebSocket + MongoDB)
+- `apps/web`: frontend app (Next.js + React)
+- `libs/contracts`: shared event contracts/topics used across services
+- `libs/observability`: shared Prometheus metrics helpers/interceptors
+- `ops/observability`: local observability stack (Prometheus, Grafana, Loki, OTel collector)
+
+### Tech Stack
+
+- Backend: NestJS, TypeORM, PostgreSQL, BullMQ, Redis, Kafka
+- Realtime: Socket.IO/WebSocket gateway with MongoDB-backed notification storage
+- Frontend: Next.js 15, React 19, TailwindCSS
+- Storage: S3-compatible object storage for file/avatar handling
+- Observability: Prometheus metrics + Grafana dashboards + Loki logs
+
+### High-Level Flow
+
+```text
+web (Next.js)
+  -> core-api (NestJS + PostgreSQL/Redis/BullMQ)
+  -> notifications-gateway (WebSocket)
+
+core-api
+  -> publishes notification events (Kafka, shared contracts)
+  -> notifications-gateway consumes and pushes realtime updates
+```
+
 ## Local Observability Stack
 
 This repo includes a local observability setup for `core-api`:
